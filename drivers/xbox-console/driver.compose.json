@@ -1,0 +1,43 @@
+{
+  "name": {
+    "en": "Xbox console"
+  },
+  "class": "other",
+  "capabilities": [
+    "speaker_album",
+    "speaker_artist",
+    "button",
+    "channel_down",
+    "channel_up",
+    "speaker_next",
+    "speaker_playing",
+    "speaker_prev",
+    "volume_set",
+    "speaker_shuffle",
+    "speaker_track",
+    "onoff",
+    "volume_down",
+    "volume_mute",
+    "volume_up"
+  ],
+  "pair": [
+    {
+      "id": "additional_ip"
+    },
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": {
+        "next": "add_devices"
+      }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ],
+  "images": {
+    "large": "/drivers/xbox-console/assets/images/large.png",
+    "small": "/drivers/xbox-console/assets/images/small.png"
+  }
+}

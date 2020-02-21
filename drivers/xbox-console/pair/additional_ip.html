@@ -1,0 +1,35 @@
+    <h1>Discover consoles</h1>
+    <p>You can press next to auto discover any console on your network.<br />
+    The console must be turned on for discovery and on the same network</p>
+    <p>In some networks a router or switch might block discovery messages across network segments, in that case you can enter the IP address of the console below and try to discover it based on its IP.</p>
+    <fieldset>
+        <legend>Search for manual ip?</legend>
+        <div class="field row">
+            <label for="address">IP adress (leave empty for auto discover)</label>
+            <input id="address" type="text" value="" />
+        </div>
+    </fieldset>
+
+    <button id="start" class="right">Start console discovery -></button>
+
+    <script type="text/javascript" >
+
+        var startElement = document.getElementById('start');
+        var addressElement = document.getElementById('address');
+
+        startElement.addEventListener('click', function(e) {
+            if(addressElement.value!='')
+            {
+                Homey.emit( 'discover_byip', { 'address': addressElement.value }, function( err, result ){
+                    console.log(result); 
+                });
+            }
+            else 
+            {
+                Homey.emit( 'discover_auto', { 'address': null }, function( err, result ){
+                    console.log(result); 
+                });
+            }
+        });
+    </script>
+</body>

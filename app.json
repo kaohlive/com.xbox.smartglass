@@ -1,0 +1,70 @@
+{
+  "id": "com.xbox.smartglass",
+  "version": "1.0.0",
+  "compatibility": ">=3.0.0",
+  "sdk": 2,
+  "name": {
+    "en": "Xbox Smartglass"
+  },
+  "description": {
+    "en": "Interact with your Xbox using the smartglass features"
+  },
+  "category": [
+    "tools"
+  ],
+  "permissions": [],
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png"
+  },
+  "author": {
+    "name": "Vincent Boer",
+    "email": "vincent@vdboer.nl"
+  },
+  "drivers": [
+    {
+      "name": {
+        "en": "Xbox console"
+      },
+      "class": "other",
+      "capabilities": [
+        "speaker_album",
+        "speaker_artist",
+        "button",
+        "channel_down",
+        "channel_up",
+        "speaker_next",
+        "speaker_playing",
+        "speaker_prev",
+        "volume_set",
+        "speaker_shuffle",
+        "speaker_track",
+        "onoff",
+        "volume_down",
+        "volume_mute",
+        "volume_up"
+      ],
+      "pair": [
+        {
+          "id": "additional_ip"
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "images": {
+        "large": "/drivers/xbox-console/assets/images/large.png",
+        "small": "/drivers/xbox-console/assets/images/small.png"
+      },
+      "id": "xbox-console"
+    }
+  ]
+}
