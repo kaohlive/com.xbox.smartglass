@@ -1,53 +1,79 @@
 'use strict';
 
 const Homey = require('homey');
-const xbox = require('../../lib/xbox')
-const keys = require('../../lib/SmartGlass/glasscryptokeys').Keys;
+const Smartglass = require('xbox-smartglass-core-node');
 
 class XBoxDevice extends Homey.Device {
 	
-	onInit() {
+	async onInit() {
 		this.log('['+this.getData().name+'] XBoxDevice has been loaded');
 		//Lets keep it at on off for now
 		this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
 		this._driver = this.getDriver();
-		this.cryptoKeys = new keys(this.getData().certificateInfo.publicKey);
+		this.client = Smartglass();
+
+		console.log('attempt to connect to console ['+this.getData().name+']');
+		await this.updateConsole();
+		await this.bindEvents();
 	}
 
-	// this method is called when the Device has requested a state change (turned on or off)
+	async updateConsole() {
+		//Attempt to connect to get current device status
+		var deviceData = this.getData();
+		await this.client.connect(deviceData.address).catch(err => {
+			console.log('could not connect to console ['+err+']');
+			
+		});
+		if(this.client._connection_status)
+		{
+			console.log('Xbox ['+deviceData.name+'] succesfully connected!');
+			deviceData.liveId=this.client._console.getLiveid();
+			console.log('LiveId stored ['+deviceData.liveId+']');
+			this.setIfHasCapability('onoff', true);
+		} else {
+			console.log('Failed to connect to xbox ['+deviceData.name+']');
+			this.setIfHasCapability('onoff', false);
+		}
+	}
+
+	bindEvents() {
+
+		this._interval = setInterval(function(){
+			console.log('connection_status:', this.client._connection_status);
+			//If we are no longer connected, try to reconnect
+			if(!this.client._connection_status)
+				this.updateConsole();
+		}.bind(this), 10000);
+
+		this.client.on('_on_timeout', function(message, xbox, remote, smartglass){
+			console.log('Connection timed out.')
+			//clearInterval(this._interval);
+			//Lets try to reconnect and see if it is still on or not
+			//this.updateConsole();
+		}.bind(this, this._interval));
+	}
+
+		// this method is called when the Device has requested a state change (turned on or off)
 	async onCapabilityOnoff( value, opts ) {
 		this.setIfHasCapability('onoff', value)
 		var deviceData = this.getData();
 		if(value)
 		{
-			await xbox.sendTurnOnMessage(deviceData.name,deviceData.id,deviceData.address);
+			if(!this.client._connection_status)
+				this.client.powerOn({
+					live_id: deviceData.liveid,
+					tries: 5,
+					ip: deviceData.address
+				}).then(function(response){
+					console.log('Console booted:', response)
+				}, function(error){
+					console.log('Booting console failed:', error)
+				});
+		} else{
+			console.log('Console not :', response)
 		}
-		else
-		{
-			
-			await xbox.sendTurnOffMessage(deviceData.name,deviceData.id,deviceData.clientuuid,deviceData.address,this.cryptoKeys);
-		}
-		this.updateDevice()
 	}
-
-	async updateDevice() {
-		//First get some info we need to poll the current console status
-        const settings = this.getSettings()
-        const liveid = this.getData().id
-		const address = this.getData().address
-		//Now get an update off the console status
-//Todo: determine what and how to poll data
-//		const data = CP.enhance(await MNM(id))
-
-		//Get old status from the cache
-//        const prev = this.getStoreValue('cache')
-//		await this.setStoreValue('cache', data)
-		//And compare difference so we can launch workflow tiggers and update the device status to reflect
-
-
-        console.info('device updated')
-    }
-	
+		
 	setIfHasCapability(cap, value) {
         if (this.hasCapability(cap)) {
             return this.setCapabilityValue(cap, value).catch(this.error)
