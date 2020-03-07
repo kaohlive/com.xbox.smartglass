@@ -6,71 +6,97 @@ const Smartglass = require('xbox-smartglass-core-node');
 class XBoxDevice extends Homey.Device {
 	
 	async onInit() {
-		this.log('['+this.getData().name+'] XBoxDevice has been loaded');
+		//Remember often used values in mem
+		this.device = {};
+		//This is the consoles name, we do not really care how the user calls it in Homey
+		this.device.name = this.getData().name;
+		this.device.liveId = this.getSettings().liveid;
+		this.device.currentApp = { 'appStoreId': null };
+		this.device.powered = false;
+		if(this.getSettings().console_address=='')
+			await this.setSettings({ console_address:this.getData().address+'' });
+		this.device.address = this.getSettings().console_address;
+		this.log('['+this.device.name+'] XBoxDevice ('+this.device.liveId+':'+this.device.address+') has been loaded');
+		//Register our capabilities
 		//Lets keep it at on off for now
 		this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
 		this._driver = this.getDriver();
 		this.client = Smartglass();
 
-		console.log('attempt to connect to console ['+this.getData().name+']');
 		await this.updateConsole();
 		await this.bindEvents();
 	}
 
 	async updateConsole() {
 		//Attempt to connect to get current device status
-		var deviceData = this.getData();
-		await this.client.connect(deviceData.address).catch(err => {
-			console.log('could not connect to console ['+err+']');
-			
+		await this.client.connect(this.device.address).catch(err => {
+			//console.log('could not connect to console ['+err+']');
 		});
 		if(this.client._connection_status)
 		{
-			console.log('Xbox ['+deviceData.name+'] succesfully connected!');
-			deviceData.liveId=this.client._console.getLiveid();
-			console.log('LiveId stored ['+deviceData.liveId+']');
-			this.setIfHasCapability('onoff', true);
+			console.log('Xbox ['+this.device.name+'] succesfully connected!');
+			this.device.liveId=this.client._console.getLiveid();
+			await this.setSettings({liveid:this.client._console.getLiveid()});
+			//console.log('LiveId stored ['+this.device.liveId+']');
+			if(!this.device.powered)
+				this._driver.triggerConsoleOn(this);
+			this.setIfHasCapability('onoff', true); this.device.powered=true;
 		} else {
-			console.log('Failed to connect to xbox ['+deviceData.name+']');
+			console.log('Failed to connect to xbox ['+this.device.name+']');
+			if(this.device.powered)
+				this._driver.triggerConsoleOff(this);  this.device.powered=false;
 			this.setIfHasCapability('onoff', false);
 		}
 	}
 
-	bindEvents() {
-
+	async bindEvents() {
 		this._interval = setInterval(function(){
-			console.log('connection_status:', this.client._connection_status);
 			//If we are no longer connected, try to reconnect
 			if(!this.client._connection_status)
 				this.updateConsole();
+			else{
+				//Else start doing our events
+				this.checkActiveApp();
+			}
 		}.bind(this), 10000);
 
 		this.client.on('_on_timeout', function(message, xbox, remote, smartglass){
 			console.log('Connection timed out.')
-			//clearInterval(this._interval);
-			//Lets try to reconnect and see if it is still on or not
-			//this.updateConsole();
 		}.bind(this, this._interval));
+	}
+
+	checkActiveApp()
+	{
+		var newAppId = this.client.getActiveApp();
+		console.log('current app on ['+this.device.name+'] is :'+newAppId);
+		if(this.device.currentApp.appStoreId != newAppId)
+			this._driver.triggerAppChange(this, { 'new_app_name': newAppId })
+		this.device.currentApp.appStoreId = newAppId;
 	}
 
 		// this method is called when the Device has requested a state change (turned on or off)
 	async onCapabilityOnoff( value, opts ) {
 		this.setIfHasCapability('onoff', value)
-		var deviceData = this.getData();
 		if(value)
 		{
 			if(!this.client._connection_status)
 				this.client.powerOn({
-					live_id: deviceData.liveid,
+					live_id: this.device.liveId,
 					tries: 5,
-					ip: deviceData.address
+					ip: this.device.address
 				}).then(function(response){
-					console.log('Console booted:', response)
+					console.log('Console booted:', response);
+					this._driver.triggerConsoleOn(this);
 				}, function(error){
 					console.log('Booting console failed:', error)
 				});
 		} else{
-			console.log('Console not :', response)
+			if(this.client._connection_status)
+				this.client.powerOff().then(function(status){
+					console.log('Shutdown succes!')
+				}, function(error){
+					console.log('Shutdown error:', error)
+				});
 		}
 	}
 		

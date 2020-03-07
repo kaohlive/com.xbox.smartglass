@@ -21,12 +21,99 @@
     "name": "Vincent Boer",
     "email": "vincent@vdboer.nl"
   },
+  "flow": {
+    "triggers": [
+      {
+        "id": "app-playing-changed",
+        "title": {
+          "en": "App playing changed",
+          "nl": "Actieve app is veranderd"
+        },
+        "hint": {
+          "en": "Is triggered when the console makes another app active",
+          "nl": "Wordt geactiveerd als de console een andere app actief maakt"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=xbox-console"
+          },
+          {
+            "name": "console",
+            "type": "device",
+            "filter": "driver_id=xbox-console"
+          }
+        ],
+        "tokens": [
+          {
+            "type": "string",
+            "name": "new_app_name",
+            "title": {
+              "en": "New playing app name",
+              "nl": "Nieuwe actieve app naam"
+            },
+            "example": {
+              "en": "The name of the new app that is active",
+              "nl": "De naam van de nieuwe app die actief is geworden"
+            }
+          }
+        ]
+      },
+      {
+        "id": "xbox-powered-on",
+        "title": {
+          "en": "Xbox powered on",
+          "nl": "Xbox is aangegaan"
+        },
+        "hint": {
+          "en": "Triggers when the console is turned on",
+          "nl": "Triggers als de console aangaat"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=xbox-console"
+          },
+          {
+            "name": "console",
+            "type": "device",
+            "filter": "driver_id=xbox-console"
+          }
+        ]
+      },
+      {
+        "id": "xbox-powered-off",
+        "title": {
+          "en": "Xbox powered off",
+          "nl": "Xbox is uitgegaan"
+        },
+        "hint": {
+          "en": "Triggers when the console is turned off",
+          "nl": "Triggers als de console uitgaat"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=xbox-console"
+          },
+          {
+            "name": "console",
+            "type": "device",
+            "filter": "driver_id=xbox-console"
+          }
+        ]
+      }
+    ]
+  },
   "drivers": [
     {
       "name": {
         "en": "Xbox console"
       },
-      "class": "other",
+      "class": "tv",
       "capabilities": [
         "speaker_album",
         "speaker_artist",
@@ -64,6 +151,35 @@
         "large": "/drivers/xbox-console/assets/images/large.png",
         "small": "/drivers/xbox-console/assets/images/small.png"
       },
+      "settings": [
+        {
+          "type": "group",
+          "label": {
+            "en": "Console settings",
+            "nl": "Console instellingen"
+          },
+          "children": [
+            {
+              "id": "liveid",
+              "type": "text",
+              "label": {
+                "en": "Live ID",
+                "nl": "Live ID"
+              },
+              "value": ""
+            },
+            {
+              "id": "console_address",
+              "type": "text",
+              "label": {
+                "en": "IP4 address",
+                "nl": "IP4 addres"
+              },
+              "value": ""
+            }
+          ]
+        }
+      ],
       "id": "xbox-console"
     }
   ]

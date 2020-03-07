@@ -2,7 +2,7 @@
   "name": {
     "en": "Xbox console"
   },
-  "class": "other",
+  "class": "tv",
   "capabilities": [
     "speaker_album",
     "speaker_artist",
@@ -39,5 +39,34 @@
   "images": {
     "large": "/drivers/xbox-console/assets/images/large.png",
     "small": "/drivers/xbox-console/assets/images/small.png"
-  }
+  },
+  "settings": [
+    {
+      "type": "group",
+      "label": {
+        "en": "Console settings",
+        "nl": "Console instellingen"
+      },
+      "children": [
+        {
+          "id": "liveid",
+          "type": "text",
+          "label": {
+            "en": "Live ID",
+            "nl": "Live ID"
+          },
+          "value": ""
+        },
+        {
+          "id": "console_address",
+          "type": "text",
+          "label": {
+            "en": "IP4 address",
+            "nl": "IP4 addres"
+          },
+          "value": ""
+        }
+      ]
+    }
+  ]
 }

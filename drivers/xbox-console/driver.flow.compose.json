@@ -1,0 +1,72 @@
+{
+  "triggers": [
+    {
+      "id": "app-playing-changed",
+      "title": {
+        "en": "App playing changed",
+        "nl": "Actieve app is veranderd"
+      },
+      "hint": {
+        "en": "Is triggered when the console makes another app active",
+        "nl": "Wordt geactiveerd als de console een andere app actief maakt"
+      },
+      "args": [
+        {
+          "name": "console",
+          "type": "device",
+          "filter": "driver_id=xbox-console"
+        }
+      ],
+      "tokens": [
+        {
+          "type": "string",
+          "name": "new_app_name",
+          "title": {
+            "en": "New playing app name",
+            "nl": "Nieuwe actieve app naam"
+          },
+          "example": {
+            "en": "The name of the new app that is active",
+            "nl": "De naam van de nieuwe app die actief is geworden"
+          }
+        }
+      ]
+    },
+    {
+      "id": "xbox-powered-on",
+      "title": {
+        "en": "Xbox powered on",
+        "nl": "Xbox is aangegaan"
+      },
+      "hint": {
+        "en": "Triggers when the console is turned on",
+        "nl": "Triggers als de console aangaat"
+      },
+      "args": [
+        {
+          "name": "console",
+          "type": "device",
+          "filter": "driver_id=xbox-console"
+        }
+      ]
+    },
+    {
+      "id": "xbox-powered-off",
+      "title": {
+        "en": "Xbox powered off",
+        "nl": "Xbox is uitgegaan"
+      },
+      "hint": {
+        "en": "Triggers when the console is turned off",
+        "nl": "Triggers als de console uitgaat"
+      },
+      "args": [
+        {
+          "name": "console",
+          "type": "device",
+          "filter": "driver_id=xbox-console"
+        }
+      ]
+    }
+  ]
+}
