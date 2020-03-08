@@ -1,10 +1,11 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "compatibility": ">=3.0.0",
+  "brandColor": "#107c10",
   "sdk": 2,
   "name": {
-    "en": "Xbox Smartglass"
+    "en": "Xbox console companion"
   },
   "description": {
     "en": "Interact with your Xbox using the smartglass features"
@@ -14,11 +15,11 @@
   ],
   "permissions": [],
   "images": {
-    "large": "/assets/images/large.png",
-    "small": "/assets/images/small.png"
+    "large": "/assets/images/large.jpg",
+    "small": "/assets/images/small.jpg"
   },
   "author": {
-    "name": "Vincent Boer",
-    "email": "vincent@vdboer.nl"
+    "name": "Kaoh",
+    "email": "kaoh@kaoh.nl"
   }
 }

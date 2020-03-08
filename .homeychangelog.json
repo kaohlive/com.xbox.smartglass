@@ -1,0 +1,5 @@
+{
+  "0.1.0": {
+    "en": "First draft version, basic on and off capabilities and running console app detection with flow cards. Support a nice discovery functionality that requires no input from the user."
+  }
+}
