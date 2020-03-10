@@ -1,0 +1,10 @@
+{
+    "type": "boolean",
+    "title": {
+      "en": "Left"
+    },
+    "getable": false,
+    "setable": true,
+    "uiComponent": "button",
+    "uiQuickAction": true
+  }

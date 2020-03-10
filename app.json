@@ -1,6 +1,6 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "compatibility": ">=3.0.0",
   "brandColor": "#107c10",
   "sdk": 2,
@@ -169,5 +169,117 @@
       ],
       "id": "xbox-console"
     }
-  ]
+  ],
+  "capabilities": {
+    "controller_A": {
+      "type": "boolean",
+      "title": {
+        "en": "A"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_B": {
+      "type": "boolean",
+      "title": {
+        "en": "B"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Down": {
+      "type": "boolean",
+      "title": {
+        "en": "Down"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Left": {
+      "type": "boolean",
+      "title": {
+        "en": "Left"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Menu": {
+      "type": "boolean",
+      "title": {
+        "en": "Menu"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_nexus": {
+      "type": "boolean",
+      "title": {
+        "en": "Nexus"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Right": {
+      "type": "boolean",
+      "title": {
+        "en": "Right"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Up": {
+      "type": "boolean",
+      "title": {
+        "en": "Up"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_View": {
+      "type": "boolean",
+      "title": {
+        "en": "View"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_X": {
+      "type": "boolean",
+      "title": {
+        "en": "X"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    },
+    "controller_Y": {
+      "type": "boolean",
+      "title": {
+        "en": "Y"
+      },
+      "getable": false,
+      "setable": true,
+      "uiComponent": "button",
+      "uiQuickAction": true
+    }
+  }
 }
