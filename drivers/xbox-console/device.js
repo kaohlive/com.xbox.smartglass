@@ -37,30 +37,48 @@ class XBoxDevice extends Homey.Device {
 
 	async _registerCapability()
 	{
-		this.addCapability('onoff');
-		this.addCapability('speaker_playing');
-        this.addCapability("speaker_next");
-        this.addCapability("speaker_prev");
-		this.addCapability("speaker_album");
-        this.addCapability("speaker_artist");
+		if(!this.hasCapability("onoff"))
+			await this.addCapability('onoff');
+		if(!this.hasCapability("speaker_playing"))
+			await this.addCapability('speaker_playing');
+		if(!this.hasCapability("speaker_next"))
+			await this.addCapability("speaker_next");
+		if(!this.hasCapability("speaker_prev"))
+			await this.addCapability("speaker_prev");
+		if(!this.hasCapability("speaker_album"))
+			await this.addCapability("speaker_album");
+		if(!this.hasCapability("speaker_artist"))
+			await this.addCapability("speaker_artist");
 		this.registerCapabilityListener('onoff', this.onCapabilityOnoff.bind(this));
 		this.registerCapabilityListener('speaker_playing', this.onCapabilitySpeakerPlaying.bind(this));
 		this.registerCapabilityListener('speaker_next', this.onCapabilitySpeakerNext.bind(this));
 		this.registerCapabilityListener('speaker_prev', this.onCapabilitySpeakerPrev.bind(this));
 		//Remove some unsupporty capabilities
+		//await this.removeCapability("controller_nexus");
 		//TODO: lets add some custom button capabilities for the controller
-		this.addCapability("controller_nexus");
-		this.addCapability("controller_Y");
-		this.addCapability("controller_X");
-		this.addCapability("controller_B");
-		this.addCapability("controller_A");
-		this.addCapability("controller_Menu");
-		this.addCapability("controller_View");
-		this.addCapability("controller_Up");
-		this.addCapability("controller_Left");
-		this.addCapability("controller_Right");
-		this.addCapability("controller_Down");
-		this.registerCapabilityListener('controller_nexus', this.onCapabilityControllerNexus.bind(this));
+		if(!this.hasCapability("controller_nexus"))
+			await this.addCapability("controller_nexus");
+		if(!this.hasCapability("controller_Y"))
+			await this.addCapability("controller_Y");
+		if(!this.hasCapability("controller_X"))
+			await this.addCapability("controller_X");
+		if(!this.hasCapability("controller_B"))
+			await this.addCapability("controller_B");
+		if(!this.hasCapability("controller_A"))
+			await this.addCapability("controller_A");
+		if(!this.hasCapability("controller_Menu"))
+			await this.addCapability("controller_Menu");
+		if(!this.hasCapability("controller_View"))
+			await this.addCapability("controller_View");
+		if(!this.hasCapability("controller_Up"))
+			await this.addCapability("controller_Up");
+		if(!this.hasCapability("controller_Left"))
+			await this.addCapability("controller_Left");
+		if(!this.hasCapability("controller_Right"))
+			await this.addCapability("controller_Right");
+		if(!this.hasCapability("controller_Down"))
+			await this.addCapability("controller_Down");
+		//this.registerCapabilityListener('controller_nexus', this.onCapabilityControllerNexus.bind(this));
 		this.registerCapabilityListener('controller_Y', this.onCapabilityControllerY.bind(this));
 		this.registerCapabilityListener('controller_X', this.onCapabilityControllerX.bind(this));
 		this.registerCapabilityListener('controller_B', this.onCapabilityControllerB.bind(this));
@@ -164,6 +182,13 @@ class XBoxDevice extends Homey.Device {
 		{
 			this.client.getManager('system_media').sendCommand('pause');
 		}
+	}
+
+	sendControllerButton(button){
+		this.client.getManager('system_input').sendCommand(button);
+	}
+	sendMediaButton(button){
+		this.client.getManager('system_media').sendCommand(button);
 	}
 
 	async onCapabilitySpeakerNext( value, opts)

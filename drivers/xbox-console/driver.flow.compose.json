@@ -68,5 +68,80 @@
         }
       ]
     }
+  ],
+  "actions": [
+    {
+      "id": "send-controller-button",
+      "title": {
+        "en": "Press a controller button",
+        "nl": "Druk een controller knop in"
+      },
+      "hint": {
+        "en": "Send a controller button to your console",
+        "nl": "Stuur een controller knop naar je console"
+      },
+      "args": [
+        {
+          "name": "device",
+          "type": "device",
+          "filter": "driver_id=xbox-console"
+        },
+        {
+          "type": "dropdown",
+          "name": "controller_button",
+          "values": [
+            { "id": "nexus", "label": {"en":"Nexus"} },
+            { "id": "menu", "label": {"en":"Menu"} },
+            { "id": "view", "label": {"en":"View"} },
+            { "id": "x", "label": {"en":"X"} },
+            { "id": "y", "label": {"en":"Y"} },
+            { "id": "a", "label": {"en":"A"} },
+            { "id": "b", "label": {"en":"B"} },
+            { "id": "up", "label": {"en":"Up"} },
+            { "id": "down", "label": {"en":"Down"} },
+            { "id": "left", "label": {"en":"Left"} },
+            { "id": "right", "label": {"en":"Right"} }
+          ],
+          "placeholder": {
+            "en": "Button",
+            "nl": "Knop"
+          }
+        }
+      ]
+    },
+    {
+      "id": "send-media-button",
+      "title": {
+        "en": "Press a media button",
+        "nl": "Druk een media knop in"
+      },
+      "hint": {
+        "en": "Send a media button to your console",
+        "nl": "Stuur een media knop naar je console"
+      },
+      "args": [
+        {
+          "name": "device",
+          "type": "device",
+          "filter": "driver_id=xbox-console"
+        },
+        {
+          "type": "dropdown",
+          "name": "media_button",
+          "values": [
+            { "id": "playpause", "label": {"en":"Toggle Play"} },
+            { "id": "play", "label": {"en":"Play"} },
+            { "id": "pause", "label": {"en":"Pause"} },
+            { "id": "stop", "label": {"en":"Stop"} },
+            { "id": "prev_track", "label": {"en":"Prev. Track"} },
+            { "id": "next_track", "label": {"en":"Next Track"} }
+          ],
+          "placeholder": {
+            "en": "Button",
+            "nl": "Knop"
+          }
+        }
+      ]
+    }
   ]
 }

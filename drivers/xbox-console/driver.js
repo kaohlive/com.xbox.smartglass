@@ -16,6 +16,14 @@ class XBoxDriver extends Homey.Driver {
 		this._flowTriggerConsoleOff = new Homey.FlowCardTriggerDevice('xbox-powered-off').registerRunListener(( args, state ) => {
 			return Promise.resolve( true );
 		  }).register();
+
+		new Homey.FlowCardAction('send-controller-button')
+		  .register()
+		  .registerRunListener((args, state) => args.device.sendControllerButton(args.controller_button));
+
+		new Homey.FlowCardAction('send-controller-button')
+		  .register()
+		  .registerRunListener((args, state) => args.device.sendMediaButton(args.media_button));
 	}
 
 	onPair( socket ) {

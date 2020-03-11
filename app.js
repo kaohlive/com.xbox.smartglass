@@ -6,6 +6,8 @@ class XBoxSmartglass extends Homey.App {
 	
 	onInit() {
 		this.log('XBox Smartglass app is running...');
+
+		
 	}
 	
 }
