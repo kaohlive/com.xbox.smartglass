@@ -10,13 +10,7 @@
         "en": "Is triggered when the console makes another app active",
         "nl": "Wordt geactiveerd als de console een andere app actief maakt"
       },
-      "args": [
-        {
-          "name": "console",
-          "type": "device",
-          "filter": "driver_id=xbox-console"
-        }
-      ],
+      "args": [],
       "tokens": [
         {
           "type": "string",
@@ -82,11 +76,6 @@
       },
       "args": [
         {
-          "name": "device",
-          "type": "device",
-          "filter": "driver_id=xbox-console"
-        },
-        {
           "type": "dropdown",
           "name": "controller_button",
           "values": [
@@ -121,11 +110,6 @@
       },
       "args": [
         {
-          "name": "device",
-          "type": "device",
-          "filter": "driver_id=xbox-console"
-        },
-        {
           "type": "dropdown",
           "name": "media_button",
           "values": [
@@ -139,6 +123,27 @@
           "placeholder": {
             "en": "Button",
             "nl": "Knop"
+          }
+        }
+      ]
+    },
+    {
+      "id": "send-launch-app",
+      "title": {
+        "en": "Launch an app",
+        "nl": "Start een app"
+      },
+      "hint": {
+        "en": "Launches an app on your console",
+        "nl": "Start een app"
+      },
+      "args": [
+        {
+          "type": "text",
+          "name": "app_name",
+          "placeholder": {
+            "en": "Xbox.Dashboard_8wekyb3d8bbwe!Xbox.Dashboard.Application",
+            "nl": "Xbox.Dashboard_8wekyb3d8bbwe!Xbox.Dashboard.Application"
           }
         }
       ]

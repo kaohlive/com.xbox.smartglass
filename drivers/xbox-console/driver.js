@@ -21,9 +21,13 @@ class XBoxDriver extends Homey.Driver {
 		  .register()
 		  .registerRunListener((args, state) => args.device.sendControllerButton(args.controller_button));
 
-		new Homey.FlowCardAction('send-controller-button')
+		new Homey.FlowCardAction('send-media-button')
 		  .register()
 		  .registerRunListener((args, state) => args.device.sendMediaButton(args.media_button));
+
+		new Homey.FlowCardAction('send-launch-app')
+		  .register()
+		  .registerRunListener((args, state) => args.device.sendLaunchAppMessage(args.app_name));
 	}
 
 	onPair( socket ) {

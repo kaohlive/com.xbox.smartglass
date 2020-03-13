@@ -161,13 +161,40 @@ class XBoxDevice extends Homey.Device {
 
 	checkActiveApp()
 	{
+
+		//https://docs.microsoft.com/en-us/gaming/xbox-live/api-ref/xbox-live-rest/uri/atoc-xboxlivews-reference-uris
+		//https://github.com/XboxReplay/xboxlive-auth
 		var newAppId = this.client.getActiveApp();
+		
 		if(this.device.currentApp.appStoreId != newAppId)
 		{
+			var result = require('../../lib/titlehub.js').GetappTitleBatch(newAppId.split('!')[0]);
 			console.log('app chagned to ['+this.device.name+'] is :'+newAppId);
 			this._driver.triggerAppChange(this, { 'new_app_name': newAppId })
 		}
 		this.device.currentApp.appStoreId = newAppId;
+	}
+
+	sendLaunchAppMessage(appname)
+	{
+		// const Packer = require('xbox-smartglass-core-node/src/packet/packer');
+		// var titleLaunch = Packer('message.TitleLaunch');
+		// titleLaunch.set('location', 0); //0=Full, 1=Fill, 2=Snapped, 3=StartView, 4=SystemUI, 5=Default
+		// titleLaunch.set('uri', appname);
+		// var titleLaunch_message = titleLaunch.pack(this.client._console);
+		// console.log('launch app ['+JSON.stringify(titleLaunch_message)+']')
+		// this.client._send(titleLaunch_message);
+		return true;
+	}
+
+	sendControllerButton(button){
+		this.client.getManager('system_input').sendCommand(button);
+		return true;
+	}
+
+	sendMediaButton(button){
+		this.client.getManager('system_media').sendCommand(button);
+		return true;
 	}
 
 	async onCapabilitySpeakerPlaying( value, opts)
@@ -182,13 +209,7 @@ class XBoxDevice extends Homey.Device {
 		{
 			this.client.getManager('system_media').sendCommand('pause');
 		}
-	}
-
-	sendControllerButton(button){
-		this.client.getManager('system_input').sendCommand(button);
-	}
-	sendMediaButton(button){
-		this.client.getManager('system_media').sendCommand(button);
+		return true;
 	}
 
 	async onCapabilitySpeakerNext( value, opts)

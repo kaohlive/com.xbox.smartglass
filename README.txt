@@ -1,5 +1,3 @@
-Xbox Companion app
-
 Interact with your Xbox using the smartglass features
 It is inspired by the OpenXbox project and using their nodejs library to make it an compatible app for Homey.
 
