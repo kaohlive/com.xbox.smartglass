@@ -1,6 +1,6 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "0.2.0",
+  "version": "0.3.1",
   "compatibility": ">=3.0.0",
   "brandColor": "#107c10",
   "sdk": 2,
@@ -52,6 +52,42 @@
             "example": {
               "en": "The name of the new app that is active",
               "nl": "De naam van de nieuwe app die actief is geworden"
+            }
+          },
+          {
+            "type": "string",
+            "name": "new_app_family_id",
+            "title": {
+              "en": "New playing app family ID",
+              "nl": "Nieuwe actieve app family ID"
+            },
+            "example": {
+              "en": "The family id of the new app that is active",
+              "nl": "De family id van de nieuwe app die actief is geworden"
+            }
+          },
+          {
+            "type": "string",
+            "name": "new_app_art_url",
+            "title": {
+              "en": "New playing app artwork image url",
+              "nl": "Nieuwe actieve app artwork url"
+            },
+            "example": {
+              "en": "The url of the artwork for the new app that is active",
+              "nl": "De url van het artwork van de nieuwe app die actief is geworden"
+            }
+          },
+          {
+            "type": "image",
+            "name": "new_app_art_image",
+            "title": {
+              "en": "New playing app artwork image",
+              "nl": "Nieuwe actieve app artwork"
+            },
+            "example": {
+              "en": "The image of the artwork for the new app that is active",
+              "nl": "De afbeelding van het artwork van de nieuwe app die actief is geworden"
             }
           }
         ]

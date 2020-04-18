@@ -1,5 +1,11 @@
 {
   "0.1.0": {
     "en": "First draft version, basic on and off capabilities and running console app detection with flow cards. Support a nice discovery functionality that requires no input from the user."
+  },
+  "0.3.0": {
+    "en": "Added support for buttons and media controls, if you authorize the app you get app artwork and nice names in the media screen. Added workflow support to send buttons to the console."
+  },
+  "0.3.1": {
+    "en": "Updated to 0.6.4 of package xbox-smartglass to improve stability and fixed nexus button not working"
   }
 }
