@@ -28,32 +28,35 @@ class XBoxDriver extends Homey.Driver {
 	}
 
 	async onPair(session) {
-		let discoveredDevices;
-		let waitdelay = 4000;
+		//let discoveredDevices;
+		//let waitdelay = 4000;
+		let defer;
 
 		session.setHandler('discover_byip', async (data) => {
 			// console.log('get the add device list view ready');
 			// socket.showView('list_devices');
 			var address = data.address;
 			console.log('Start discovery for console with ip: ' + address);
+			defer = new Defer();
 			DiscoverConsoles(address)
 				.then(function (consoles) {
 					const devices = consoles.map((xbox) => {
 						return xbox;
 					});
-					discoveredDevices = devices;
+					defer.resolve(devices);
 				});
 			return;
 		});
 
 		session.setHandler('discover_auto', async (data) => {
 			console.log('Start auto discovery for consoles');
+			defer = new Defer();
 			DiscoverConsoles(null)
 				.then(function (consoles) {
 					const devices = consoles.map((xbox) => {
 						return xbox;
 					});
-					discoveredDevices = devices;
+					defer.resolve(devices);
 				});
 			return;
 		});
@@ -61,9 +64,11 @@ class XBoxDriver extends Homey.Driver {
 
 		session.setHandler('list_devices', async (data) => {
 			console.log('Device list view loaded');
-			await this.sleep(waitdelay);
-			console.log('Time to see what devices were found');
-			return discoveredDevices;
+			return defer.promise;
+			// console.log('Device list view loaded');
+			// await this.sleep(waitdelay);
+			// console.log('Time to see what devices were found');
+			// return discoveredDevices;
 		});
 	}
 
@@ -125,6 +130,28 @@ async function DiscoverConsoles(consoleip) {
 	});
 	console.log('found [' + devices.length + '] consoles on your network');
 	return devices;
+}
+
+class Defer {
+    get isDefered() { return !!this._isDefered; }
+    set isDefered(v) { this._isDefered = v; }
+
+    get promise() { return this._promise; }
+    set promise(v) { this._promise = v; }
+    /** 
+     * @param {Number} timeout 
+     */
+    constructor() {
+        this._promise = new Promise((resolve, reject) => {
+            this._resolve = resolve;
+            this._reject = reject;
+        });
+    }
+    then(fun) { this._promise.then(fun); }
+    catch(fun) { this._promise.catch(fun); }
+    finally(fun) { this._promise.finally(fun); }
+    resolve(val1, val2, val3, val4) { if (this.timeout) clearTimeout(this.timeout); this.isDefered = true; this._resolve(val1, val2, val3, val4); return this.promise; }
+    reject(val1, val2, val3, val4) { if (this.timeout) clearTimeout(this.timeout); this.isDefered = true; this._reject(val1, val2, val3, val4); return this.promise; }
 }
 
 

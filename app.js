@@ -83,6 +83,9 @@ class XBoxSmartglass extends Homey.App {
 		// Start OAuth2 process
 		socket.emit('url', 'https://login.live.com/oauth20_authorize.srf?client_id=0000000048093EE3&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&display=touch&scope=service::user.auth.xboxlive.com::MBI_SSL&locale=en');
 	}
+
+	
 }
+
 
 module.exports = XBoxSmartglass;
