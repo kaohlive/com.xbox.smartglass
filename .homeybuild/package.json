@@ -1,0 +1,28 @@
+{
+  "name": "com.xbox.smartglass",
+  "version": "1.0.0",
+  "description": "Interact with your Xbox using the smartglass features It is inspired by the OpenXbox project and using their nodejs library to make it an compatible app for Homey.",
+  "main": "api.js",
+  "directories": {
+    "lib": "lib"
+  },
+  "dependencies": {
+    "http.min": "^2.0.1",
+    "node-fetch": "^2.6.0",
+    "xbox-smartglass-core-node": "^0.6.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kaohlive/com.xbox.smartglass.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/kaohlive/com.xbox.smartglass/issues"
+  },
+  "homepage": "https://github.com/kaohlive/com.xbox.smartglass#readme"
+}
