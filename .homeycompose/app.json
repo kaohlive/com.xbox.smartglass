@@ -1,6 +1,6 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "compatibility": ">=5.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -29,13 +29,13 @@
         "email": "arie@qluster-it.nl"
       }
     ]
-  },  
+  },
   "api": {
     "getLogin": {
       "method": "GET",
       "path": "/login",
       "public": false
-    },  
+    },
     "postLogin": {
       "method": "POST",
       "path": "/login",
