@@ -95,6 +95,19 @@ class XBoxDevice extends Homey.Device {
 		this.registerCapabilityListener('controller_Down', this.onCapabilityControllerDown.bind(this));
 	}
 
+	async checkConsoleOnline() {
+		await this.client.discovery(this.device.address).then(function(consoles){
+			if(consoles.length > 0){
+				console.log('Xbox ['+this.device.name+'] Console is online. Lets connect...');
+				this.setIfHasCapability('onoff', true);
+			}
+			else {
+				console.log('Xbox ['+this.device.name+'] Console is offline...');
+				this.setIfHasCapability('onoff', false);
+			}
+		}.bind(this));
+	}
+
 	async connectConsole() {
 		//Attempt to connect to get current device status
 		await this.client.connect(this.device.address).then(function(){
@@ -130,7 +143,7 @@ class XBoxDevice extends Homey.Device {
 		this._interval = setInterval(function(){
 			//If we are no longer connected, try to reconnect
 			if(!this.client._connection_status)
-				this.connectConsole();
+				this.checkConsoleOnline();
 			else
 				this.processMediaState(this.client.getManager('system_media').getState());
 		}.bind(this), 10000);
@@ -155,7 +168,7 @@ class XBoxDevice extends Homey.Device {
 
 		this.client.on('_on_console_status', function(message, xbox, remote, smartglass){
 			//When we receive messages, something might have changed
-			console.log('received an console status message');
+			console.log('received an console status message ['+JSON.stringify(message)+']');
 			this.checkActiveApp();
 		}.bind(this));
 	}
