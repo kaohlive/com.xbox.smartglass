@@ -46,8 +46,34 @@
   "flow": {
     "triggers": [
       {
+        "id": "started-gaming",
+        "title": {
+          "en": "Started Gaming",
+          "nl": "Begonnen met spelen"
+        },
+        "titleFormatted": {
+          "en": "Started Gaming",
+          "nl": "Begonnen met spelen"
+        },
+        "hint": {
+          "en": "The console started any game",
+          "nl": "Als de console een spel is gestart"
+        },
+        "args": [
+          {
+            "type": "device",
+            "name": "device",
+            "filter": "driver_id=xbox-console"
+          }
+        ]
+      },
+      {
         "id": "app-playing-changed",
         "title": {
+          "en": "App playing changed",
+          "nl": "Actieve app is veranderd"
+        },
+        "titleFormatted": {
           "en": "App playing changed",
           "nl": "Actieve app is veranderd"
         },
@@ -119,6 +145,10 @@
           "en": "Xbox powered on",
           "nl": "Xbox is aangegaan"
         },
+        "titleFormatted": {
+          "en": "Xbox [[console]] powered on",
+          "nl": "Xbox [[console]] is aangegaan"
+        },
         "hint": {
           "en": "Triggers when the console is turned on",
           "nl": "Triggers als de console aangaat"
@@ -141,6 +171,10 @@
         "title": {
           "en": "Xbox powered off",
           "nl": "Xbox is uitgegaan"
+        },
+        "titleFormatted": {
+          "en": "Xbox [[console]] powered off",
+          "nl": "Xbox [[console]] is uitgegaan"
         },
         "hint": {
           "en": "Triggers when the console is turned off",
@@ -166,6 +200,10 @@
         "title": {
           "en": "Press a controller button",
           "nl": "Druk een controller knop in"
+        },
+        "titleFormatted": {
+          "en": "Press controller [[controller_button]] button",
+          "nl": "Druk controller knop [[controller_button]] in"
         },
         "hint": {
           "en": "Send a controller button to your console",
@@ -261,6 +299,10 @@
           "en": "Press a media button",
           "nl": "Druk een media knop in"
         },
+        "titleFormatted": {
+          "en": "Press media [[media_button]] button",
+          "nl": "Druk media [[media_button]] knop in"
+        },
         "hint": {
           "en": "Send a media button to your console",
           "nl": "Stuur een media knop naar je console"
@@ -324,6 +366,10 @@
         "title": {
           "en": "Launch an app",
           "nl": "Start een app"
+        },
+        "titleFormatted": {
+          "en": "Launch app [[app_name]]",
+          "nl": "Start app [[app_name]]"
         },
         "hint": {
           "en": "Launches an app on your console",

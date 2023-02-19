@@ -37,7 +37,7 @@ class XBoxDevice extends Homey.Device {
 	async _setup()
 	{
 		await this._registerCapability();
-		await this.connectConsole();
+		//await this.connectConsole();
 		await this.bindEvents();
 		this.setAvailable();
 	}
@@ -99,39 +99,37 @@ class XBoxDevice extends Homey.Device {
 		await this.client.discovery(this.device.address).then(function(consoles){
 			if(consoles.length > 0){
 				console.log('Xbox ['+this.device.name+'] Console is online. Lets connect...');
-				this.setIfHasCapability('onoff', true);
+				//Attempt to connect to get current device status
+				//We should determine first if its really on, not just connected
+				this.client.connect(this.device.address).then(function(){
+					//console.log('We can connect, lets not load the Managers, see if if this a state that allows us to monitor messages wihtout booting');
+					this.client.addManager('system_media', SystemMediaChannel());
+				}.bind(this)).catch(err => {
+					console.log('could not connect to console ['+err+']');
+				}).then(function (){
+					if(this.client._connection_status)
+					{
+						console.log('Xbox ['+this.device.name+'] succesfully connected!');
+						this.device.liveId=this.client._console.getLiveid();
+						this.setSettings({liveid:this.client._console.getLiveid()}).then(function () {
+							console.log('LiveId stored ['+this.device.liveId+']');
+						}.bind(this));
+						this.device.powered=true;
+						this.setIfHasCapability('onoff', true);
+						this._driver.triggerConsoleOn(this);
+					} else {
+						console.log('Failed to connect to xbox ['+this.device.name+']');
+						this.device.powered=false; 
+						this.setIfHasCapability('onoff', false);
+						this._driver.triggerConsoleOff(this);
+					}					
+				}.bind(this));
 			}
 			else {
 				console.log('Xbox ['+this.device.name+'] Console is offline...');
 				this.setIfHasCapability('onoff', false);
 			}
 		}.bind(this));
-	}
-
-	async connectConsole() {
-		//Attempt to connect to get current device status
-		await this.client.connect(this.device.address).then(function(){
-				this.client.addManager('system_media', SystemMediaChannel());
-				this.client.addManager('system_input', SystemInputChannel());
-			}.bind(this)).catch(err => {
-				//console.log('could not connect to console ['+err+']');
-			});
-		if(this.client._connection_status)
-		{
-			console.log('Xbox ['+this.device.name+'] succesfully connected!');
-			this.device.liveId=this.client._console.getLiveid();
-			await this.setSettings({liveid:this.client._console.getLiveid()});
-			//console.log('LiveId stored ['+this.device.liveId+']');
-			if(!this.device.powered)
-				this._driver.triggerConsoleOn(this);
-			 this.device.powered=true;
-		} else {
-			console.log('Failed to connect to xbox ['+this.device.name+']');
-			if(this.device.powered)
-				this._driver.triggerConsoleOff(this);  
-			this.device.powered=false; 
-		}
-		this.setIfHasCapability('onoff', this.device.powered);
 	}
 
 	async processMediaState(media_state)
@@ -145,8 +143,12 @@ class XBoxDevice extends Homey.Device {
 			if(!this.client._connection_status)
 				this.checkConsoleOnline();
 			else
-				this.processMediaState(this.client.getManager('system_media').getState());
-		}.bind(this), 10000);
+			{
+				//Check if the Manager media has been activated
+				if(this.client.getManager('system_media'))
+					this.processMediaState(this.client.getManager('system_media').getState());
+			}
+		}.bind(this), 20000);
 
 		this.client.on('_on_media_state', function(message, xbox, remote, smartglass){
 			console.log('Media state update: '+JSON.stringify(message.packet_decoded));
@@ -212,11 +214,12 @@ class XBoxDevice extends Homey.Device {
 				} else {
 					appName=appName.substring(0,appName.indexOf('_'));
 					this.device.appImage.setPath(defaultAlbumArtImage.replace('{0}','Game'));
+					this._driver.triggerGameStarted(this);
 				}
 			}
 			this.device.appImage.update();
 			this.setIfHasCapability('speaker_artist', appName);
-			console.log('app chagned to ['+this.device.name+'] is :'+newAppId);
+			console.log('app changed to ['+this.device.name+'] is :'+newAppId);
 			this._driver.triggerAppChange(this, { 'new_app_name': appName, 'new_app_family_id':newAppId, 'new_app_art_url': uppImageUrl, 'new_app_art_image': this.device.appImage});
 		}
 		this.device.currentApp.appStoreId = newAppId;
@@ -235,13 +238,39 @@ class XBoxDevice extends Homey.Device {
 	}
 
 	sendControllerButton(button){
-		this.client.getManager('system_input').sendCommand(button);
-		return true;
+		//Check if we did not load the input manager yet
+		if(!this.client.getManager('system_input'))
+		{
+			//See if the console is actually online and connected
+			if(this.client._connection_status) {
+				console.log('Input Manager not loaded yet, load it first');
+				this.client.addManager('system_input', SystemInputChannel());
+				setTimeout(function(){
+					//We need the input manager fully load, but it has no event or async pattern
+					//Lets les wait a sec
+					console.log('Input Manager loaded, lets send the command button');
+					this.client.getManager('system_input').sendCommand(button);
+				}.bind(this), 25000);
+				return true;
+			} else {
+				console.log('Button command, but we are not connected, so cant send a command');
+				return false;
+			}
+		} else {
+			//If we loaded it we should be able to use it
+			this.client.getManager('system_input').sendCommand(button);
+			return true;
+		}
 	}
 
 	sendMediaButton(button){
-		this.client.getManager('system_media').sendCommand(button);
-		return true;
+		if(this.client.getManager('system_input'))
+		{
+			this.client.getManager('system_media').sendCommand(button);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	async onCapabilitySpeakerPlaying( value, opts)
@@ -250,11 +279,11 @@ class XBoxDevice extends Homey.Device {
 		this.setIfHasCapability('speaker_playing', value);
 		if(value)
 		{
-			this.client.getManager('system_media').sendCommand('play');
+			this.sendMediaButton('play');
 		}
 		else 
 		{
-			this.client.getManager('system_media').sendCommand('pause');
+			this.sendMediaButton('pause');
 		}
 		return true;
 	}
@@ -262,82 +291,82 @@ class XBoxDevice extends Homey.Device {
 	async onCapabilitySpeakerNext( value, opts)
 	{
 		console.log('media next requested ['+value+']');
-		this.setIfHasCapability('speaker_next', value);
-		this.client.getManager('system_media').sendCommand('next_track');
+		if(this.sendMediaButton('next_track'))
+			this.setIfHasCapability('speaker_next', value);
 	}
 
 	async onCapabilitySpeakerPrev( value, opts)
 	{
 		console.log('media prev requested ['+value+']');
-		this.setIfHasCapability('speaker_prev', value);
-		this.client.getManager('system_media').sendCommand('prev_track');
+		if(this.sendMediaButton('prev_track'))
+			this.setIfHasCapability('speaker_prev', value);
 	}
 
 	async onCapabilityControllerNexus(value, opts)
 	{
 		console.log('controller nexus requested ['+value+']');
-		this.setIfHasCapability('controller_nexus', value);
-		this.client.getManager('system_input').sendCommand('nexus');
+		if(this.sendControllerButton('nexus'))
+			this.setIfHasCapability('controller_nexus', value);
 	}
 	async onCapabilityControllerY(value, opts)
 	{
 		console.log('controller Y requested ['+value+']');
-		this.setIfHasCapability('controller_Y', value);
-		this.client.getManager('system_input').sendCommand('y');
+		if(this.sendControllerButton('y'))
+			this.setIfHasCapability('controller_Y', value);
 	}
 	async onCapabilityControllerX(value, opts)
 	{
 		console.log('controller X requested ['+value+']');
-		this.setIfHasCapability('controller_X', value);
-		this.client.getManager('system_input').sendCommand('x');
+		if(this.sendControllerButton('x'))
+			this.setIfHasCapability('controller_X', value);
 	}
 	async onCapabilityControllerB(value, opts)
 	{
 		console.log('controller B requested ['+value+']');
-		this.setIfHasCapability('controller_B', value);
-		this.client.getManager('system_input').sendCommand('b');
+		if(this.sendControllerButton('b'))
+			this.setIfHasCapability('controller_B', value);
 	}
 	async onCapabilityControllerA(value, opts)
 	{
 		console.log('controller A requested ['+value+']');
-		this.setIfHasCapability('controller_A', value);
-		this.client.getManager('system_input').sendCommand('a');
+		if(this.sendControllerButton('a'))
+			this.setIfHasCapability('controller_A', value);
 	}
 	async onCapabilityControllerMenu(value, opts)
 	{
 		console.log('controller Menu requested ['+value+']');
-		this.setIfHasCapability('controller_Menu', value);
-		this.client.getManager('system_input').sendCommand('menu');
+		if(this.sendControllerButton('menu'))
+			this.setIfHasCapability('controller_Menu', value);
 	}
 	async onCapabilityControllerView(value, opts)
 	{
 		console.log('controller View requested ['+value+']');
-		this.setIfHasCapability('controller_View', value);
-		this.client.getManager('system_input').sendCommand('view');
+		if(this.sendControllerButton('view'))
+			this.setIfHasCapability('controller_View', value);
 	}
 	async onCapabilityControllerUp(value, opts)
 	{
 		console.log('controller Up requested ['+value+']');
-		this.setIfHasCapability('controller_Up', value);
-		this.client.getManager('system_input').sendCommand('up');
+		if(this.sendControllerButton('up'))
+			this.setIfHasCapability('controller_Up', value);
 	}
 	async onCapabilityControllerDown(value, opts)
 	{
 		console.log('controller Down requested ['+value+']');
-		this.setIfHasCapability('controller_Down', value);
-		this.client.getManager('system_input').sendCommand('down');
+		if(this.sendControllerButton('down'))
+			this.setIfHasCapability('controller_Down', value);
 	}
 	async onCapabilityControllerLeft(value, opts)
 	{
 		console.log('controller Left requested ['+value+']');
-		this.setIfHasCapability('controller_Left', value);
-		this.client.getManager('system_input').sendCommand('left');
+		if(this.sendControllerButton('left'))
+			this.setIfHasCapability('controller_Left', value);
 	}
 	async onCapabilityControllerRight(value, opts)
 	{
 		console.log('controller Right requested ['+value+']');
-		this.setIfHasCapability('controller_Right', value);
-		this.client.getManager('system_input').sendCommand('right');
+		if(this.sendControllerButton('right'))
+			this.setIfHasCapability('controller_Right', value);
 	}
 
 	// this method is called when the Device has requested a state change (turned on or off)
@@ -347,6 +376,8 @@ class XBoxDevice extends Homey.Device {
 		if(value)
 		{
 			if(!this.client._connection_status)
+			{
+				console.log('Will attempt to boot the console: ['+this.device.liveId+','+this.device.address+']');
 				this.client.powerOn({
 					live_id: this.device.liveId,
 					tries: 5,
@@ -358,8 +389,10 @@ class XBoxDevice extends Homey.Device {
 				}.bind(this), function(error){
 					console.log('Booting console failed:', error);
 				});
-			else 
-				console.log('already booted');
+			} else {
+				console.log('already connected, lets load the input manager to ensure we are active');
+				this.client.addManager('system_input', SystemInputChannel());
+			}
 		} else{
 			if(this.client._connection_status)
 				this.client.powerOff().then(function(status){

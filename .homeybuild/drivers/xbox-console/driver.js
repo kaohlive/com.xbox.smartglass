@@ -16,7 +16,9 @@ class XBoxDriver extends Homey.Driver {
 		this._flowTriggerConsoleOff = this.homey.flow.getDeviceTriggerCard('xbox-powered-off').registerRunListener((args, state) => {
 			return Promise.resolve(true);
 		});
-
+		this._flowTriggerGameStarted = this.homey.flow.getDeviceTriggerCard('started-gaming').registerRunListener(() => {
+			return Promise.resolve(true);
+		});
 		this.homey.flow.getActionCard('send-controller-button')
 			.registerRunListener(async (args, state) => args.device.sendControllerButton(args.controller_button));
 
@@ -87,6 +89,12 @@ class XBoxDriver extends Homey.Driver {
 	triggerAppChange(device, tokens) {
 		this._flowTriggerAppChange
 			.trigger(device, tokens, {})
+			.then(this.log)
+			.catch(this.error);
+	}
+	triggerGameStarted(device) {
+		this._flowTriggerGameStarted
+			.trigger(device, {}, {})
 			.then(this.log)
 			.catch(this.error);
 	}
