@@ -16,5 +16,8 @@
   },
   "0.5.2": {
     "en": "settings page change"
+  },
+  "0.5.3": {
+    "en": "Fix to the settings page"
   }
 }
