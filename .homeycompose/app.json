@@ -1,7 +1,7 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "0.5.3",
-  "compatibility": ">=5.0.0",
+  "version": "0.5.4",
+  "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
   "name": {

@@ -19,5 +19,8 @@
   },
   "0.5.3": {
     "en": "Fix to the settings page"
+  },
+  "0.5.4": {
+    "en": "Addd support for hew device class gameconsole"
   }
 }
