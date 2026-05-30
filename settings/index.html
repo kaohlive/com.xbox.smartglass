@@ -1,86 +1,148 @@
 <head>
-    <!-- ... -->
     <script type="text/javascript" src="/homey.js" data-origin="settings"></script>
-  </head>
+    <style>
+        .status-card { padding: 12px 14px; border-radius: 8px; margin-bottom: 16px; font-size: 14px; }
+        .status-connected { background: #e6f4ea; color: #137333; }
+        .status-disconnected { background: #fce8e6; color: #b3261e; }
+        .status-checking { background: #f1f3f4; color: #5f6368; }
+        .gamertag { font-weight: 600; }
+        details { margin-top: 24px; padding: 8px 0; border-top: 1px solid #e0e0e0; }
+        details summary { cursor: pointer; font-size: 14px; color: #5f6368; padding: 8px 0; }
+        details[open] summary { margin-bottom: 8px; }
+        .advanced-body { padding: 8px 4px; }
+        .advanced-body p { margin: 0 0 8px 0; font-size: 13px; color: #5f6368; }
+        .advanced-body label { display: block; margin: 12px 0 4px; font-size: 13px; }
+        .advanced-body input { width: 100%; padding: 8px; box-sizing: border-box; }
+        .advanced-body button { margin-top: 8px; }
+        .step-list { padding-left: 20px; }
+        .step-list li { margin: 4px 0; }
+    </style>
+</head>
+<body>
 
-  <h1>XBox live authentication</h1>
-  <p>This is an optional action.<br/>
-  You can paste an refresh token from XBox live here to allow the app to allow for store interaction.</p>
-  <p>Generate this refresh token by opening your browser in a <b>private/icognito</b> mode and go to the following link:</p>
-  <p><a href="https://login.live.com/oauth20_authorize.srf?client_id=0000000048093EE3&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&display=touch&scope=service::user.auth.xboxlive.com::MBI_SSL&locale=en">XBox auhtorisation</a></p>
-  <p>The page will redirect to an empty page once you have logged in, this is expected. In the URL of this redirect page there is a RefreshToken <b>Copy that refresh token value and paste it here in the box</b></p>
-  <p>This will authorize the app to interact with XBox live using your account</p>
+    <h1>Microsoft account</h1>
+    <p>Sign in with the Microsoft account linked to your Xbox so the app can show app names and box art in the device's currently-playing tile.</p>
+    <p><em>This is optional. Without it, on/off, button input and media controls all still work — only the cosmetic "now playing" info needs it.</em></p>
 
-  <fieldset>
-    <legend>Authorization</legend>
+    <div id="status" class="status-card status-checking">Checking authentication…</div>
 
-    <div class="field row">
-        <label for="refreshToken">RefreshToken</label>
-        <input id="refreshToken" type="password" value="" />
-    </div>
-</fieldset>
-<button id="save" class="homey-button-primary-full">Save token</button>
-<button id="authorize" class="right" style="display:none;">Authorize</button>
+    <button id="authorize" class="homey-button-primary-full">Sign in with Microsoft</button>
+    <button id="signout" class="homey-button-secondary-full" style="display:none; margin-top:8px;">Sign out</button>
 
+    <details id="advanced">
+        <summary>Advanced — paste a refresh token manually</summary>
+        <div class="advanced-body">
+            <p>Use this only if the normal sign-in flow doesn't work for you (for example, the redirect back to Homey times out). Open the Microsoft consent URL in a private browser window, sign in, and paste the <code>refresh_token</code> value from the redirect URL fragment.</p>
+            <ol class="step-list">
+                <li>Open the <a id="legacyAuthUrl" target="_blank" rel="noopener">Microsoft sign-in URL</a> in a private/incognito window.</li>
+                <li>Sign in. The browser will end on a blank page.</li>
+                <li>Copy the entire URL from the address bar and paste it below — we'll extract the refresh token automatically.</li>
+            </ol>
+            <label for="legacyInput">Redirect URL or refresh token</label>
+            <input id="legacyInput" type="text" placeholder="https://login.live.com/oauth20_desktop.srf#refresh_token=…" />
+            <button id="legacySave" class="homey-button-secondary-full">Save</button>
+        </div>
+    </details>
 
-  <script type="text/javascript">
-    var url ='https://login.live.com/oauth20_authorize.srf?client_id=0000000048093EE3&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&display=touch&scope=service::user.auth.xboxlive.com::MBI_SSL&locale=en';
-    var myWindow;
-    var myTimer;
+    <script type="text/javascript">
+        const LEGACY_AUTH_URL = 'https://login.live.com/oauth20_authorize.srf?client_id=0000000048093EE3&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&display=touch&scope=service::user.auth.xboxlive.com::MBI_SSL&locale=en';
 
-    function onHomeyReady( Homey ){
-    
-      Homey.ready();
+        function onHomeyReady(Homey) {
+            const statusEl = document.getElementById('status');
+            const authorizeBtn = document.getElementById('authorize');
+            const signoutBtn = document.getElementById('signout');
+            const legacyAuthUrlEl = document.getElementById('legacyAuthUrl');
+            const legacyInput = document.getElementById('legacyInput');
+            const legacySaveBtn = document.getElementById('legacySave');
 
-      Homey.on('url', url => Homey.openURL(url));
-      Homey.on('authorized', () => showLogout());
-      Homey.on('error', err => {
-        if (err) return Homey.alert(err.message || err);
-      });
+            legacyAuthUrlEl.href = LEGACY_AUTH_URL;
 
+            function setStatus(state, message) {
+                statusEl.className = 'status-card status-' + state;
+                statusEl.innerHTML = message;
+            }
 
-      var refreshTokenElement = document.getElementById('refreshToken');
-      var saveElement = document.getElementById('save');
-      var authorizeElement = document.getElementById('authorize');
+            function refreshStatus() {
+                Homey.api('GET', '/auth/status', null, (err, result) => {
+                    if (err) {
+                        setStatus('disconnected', 'Error checking status: ' + (err.message || err));
+                        authorizeBtn.style.display = '';
+                        signoutBtn.style.display = 'none';
+                        return;
+                    }
+                    if (result && result.authenticated) {
+                        const tag = result.gamertag ? ' as <span class="gamertag">' + result.gamertag + '</span>' : '';
+                        setStatus('connected', 'Signed in' + tag + '.');
+                        authorizeBtn.style.display = 'none';
+                        signoutBtn.style.display = '';
+                    } else {
+                        const detail = result && result.error ? ' (' + result.error + ')' : '';
+                        setStatus('disconnected', 'Not signed in.' + detail);
+                        authorizeBtn.style.display = '';
+                        signoutBtn.style.display = 'none';
+                    }
+                });
+            }
 
-      Homey.get('xbl_refreshToken', function( err, refreshToken ) {
-           if( err ) return Homey.alert( err );
-           refreshTokenElement.value = refreshToken;
-        });
+            Homey.on('authorized', () => {
+                refreshStatus();
+                Homey.alert('Signed in successfully.', 'info');
+            });
+            Homey.on('auth_error', (data) => {
+                Homey.alert('Sign-in failed: ' + (data && data.message ? data.message : 'Unknown error'));
+                refreshStatus();
+            });
 
-      saveElement.addEventListener('click', function(e) {
-        
-        Homey.set('xbl_refreshToken', refreshTokenElement.value, function( err ){
-          if( err ) return Homey.alert( err );
-        });
-        
-        return Homey.alert('Settings saved');
-      });
+            authorizeBtn.addEventListener('click', () => {
+                setStatus('checking', 'Opening Microsoft sign-in…');
+                Homey.api('POST', '/auth/start', null, (err, result) => {
+                    if (err) {
+                        setStatus('disconnected', 'Could not start sign-in: ' + (err.message || err));
+                        return;
+                    }
+                    if (result && result.url) {
+                        Homey.openURL(result.url);
+                        setStatus('checking', 'Complete the sign-in in your browser. This page will update when done.');
+                    } else {
+                        setStatus('disconnected', 'No sign-in URL returned.');
+                    }
+                });
+            });
 
+            signoutBtn.addEventListener('click', () => {
+                Homey.confirm('Sign out of Microsoft?', 'warning', (err, ok) => {
+                    if (err || !ok) return;
+                    Homey.api('POST', '/auth/signout', null, () => refreshStatus());
+                });
+            });
 
-      authorizeElement.addEventListener('click', function(e) {
-        Homey.api('POST', '/login/', { state: true }, function (err, success) {
-          if (!err && success) showLogout();
-        });
-      });
+            legacySaveBtn.addEventListener('click', () => {
+                const raw = (legacyInput.value || '').trim();
+                if (!raw) return Homey.alert('Paste a URL or refresh token first.');
+                const token = extractRefreshToken(raw);
+                if (!token) return Homey.alert('Could not find a refresh_token in that value.');
+                Homey.api('POST', '/auth/refresh-token', { refreshToken: token }, (err, result) => {
+                    if (err) {
+                        Homey.alert('Token rejected: ' + (err.message || err));
+                        return;
+                    }
+                    legacyInput.value = '';
+                    Homey.alert('Token accepted.', 'info');
+                    refreshStatus();
+                });
+            });
 
-      Homey.api('GET', '/login/', {}, function (err, loggedIn) {
-          if (loggedIn) {
-            showLogout();
-          } else {
-            showLogin();
-          }
-        });
-    }
+            function extractRefreshToken(value) {
+                // Accept either a raw token, a query string, or the full redirect URL.
+                if (value.indexOf('refresh_token=') === -1) {
+                    return value; // assume the user already pasted just the token
+                }
+                const after = value.split('refresh_token=')[1];
+                return decodeURIComponent(after.split('&')[0].split('#')[0]);
+            }
 
-    function showLogout()
-    {
-      //Homey.alert('loggedIn');
-    }
-
-    function showLogin()
-    {
-      //Homey.alert('loggedOut');
-    }
-
-   </script>
+            Homey.ready();
+            refreshStatus();
+        }
+    </script>
+</body>

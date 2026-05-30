@@ -25,5 +25,8 @@
   },
   "0.6.0": {
     "en": "Stability: catch malformed packets from the console so the app no longer crashes. Fast button presses: await channel-ready instead of a fixed 25s wait. Lazy session management: no persistent SmartGlass session by default, so the console can stay in low-power / silent install mode. New device setting 'Track active app' (opt-in) for users who need the 'app playing changed' and 'started gaming' flow triggers."
+  },
+  "0.7.0": {
+    "en": "Microsoft sign-in: new 'Sign in with Microsoft' button in the app settings replaces the copy-paste-the-token flow. The browser opens, you sign in, you're done. Two-factor accounts work. Advanced section keeps a paste-the-redirect-URL fallback for environments where the redirect can't reach Homey. Token plumbing is cleaner and refresh handling is more reliable."
   }
 }

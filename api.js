@@ -1,74 +1,32 @@
 'use strict';
 
-// const Homey = require('homey');
+module.exports = {
 
-// async function handleLogin(callback) {
-// 	try {
-// 	  await Homey.app.login();
-// 	  return callback(null, true);
-// 	} catch (err) {
-// 	  return callback(new Error(Homey.__('api.error_login_failed', { error: err.message || err.toString() })));
-// 	}
-// }
+	async getAuthStatus({ homey }) {
+		return homey.app.getAuth().getStatus();
+	},
 
-// module.exports = [
-// 	{
-// 	  description: 'Get logged in state',
-// 	  method: 'GET',
-// 	  path: '/login/',
-// 	  fn: async (args, callback) => {
-// 		// Try to get the authenticated state
-// 		try {
-// 		  const authenticated = await Homey.app.isAuthenticated();
-// 		  return callback(null, authenticated);
-// 		} catch (err) {
-// 		  return callback(new Error(Homey.__('api.error_get_authenticated_state', { error: err.message || err.toString() })));
-// 		}
-// 	  },
-// 	},
-// 	{
-// 		description: 'Set logged in state',
-// 		method: 'POST',
-// 		path: '/login/',
-// 		fn: async (args = {}, callback) => {
-// 			// Check if args has expected body with state property
-// 			if (!args.body || !Object.prototype.hasOwnProperty.call(args.body, 'state') || typeof args.body.state !== 'boolean') {
-// 				return callback(new Error(Homey.__('api.retry')));
-// 			}
-
-// 			// Login/logout based on state
-// 			if (args.body.state === true) {
-// 				await handleLogin(callback);
-// 			} 
-// 		}
-// 	}
-// ];
-
-
-module.exports =
-{
-    async getLogin({ homey, params }) {
-        try {
-		  	const authenticated = await homey.app.isAuthenticated();
-			return authenticated;
+	async startAuth({ homey }) {
+		try {
+			return await homey.app.getAuth().startAuthorization();
 		} catch (err) {
-		  throw new Error(homey.__('api.error_get_authenticated_state', { error: err.message || err.toString() }));
+			throw new Error('Could not start authentication: ' + err.message);
 		}
-    },
-    async postLogin({ homey, body }) {
-        // Check if args has expected body with state property
-			if (!body || !Object.prototype.hasOwnProperty.call(body, 'state') || typeof body.state !== 'boolean') {
-				throw new Error(homey.__('api.retry'));
-			}
+	},
 
-			// Login/logout based on state
-			if (body.state === true) {
-				try {
-					await homey.app.login();
-					return  true;
-				} catch (err) {
-					throw new Error(homey.__('api.error_login_failed', { error: err.message || err.toString() }));
-				}
-			} 
-    },
+	async setRefreshToken({ homey, body }) {
+		if (!body || typeof body.refreshToken !== 'string') {
+			throw new Error('Body must include a refreshToken string');
+		}
+		try {
+			return await homey.app.getAuth().setRefreshTokenManually(body.refreshToken);
+		} catch (err) {
+			throw new Error('Refresh token rejected: ' + err.message);
+		}
+	},
+
+	async signOut({ homey }) {
+		homey.app.getAuth().signOut();
+		return { ok: true };
+	},
 };

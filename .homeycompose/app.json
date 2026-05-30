@@ -1,6 +1,6 @@
 {
   "id": "com.xbox.smartglass",
-  "version": "0.6.0",
+  "version": "0.7.0",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -31,14 +31,24 @@
     ]
   },
   "api": {
-    "getLogin": {
+    "getAuthStatus": {
       "method": "GET",
-      "path": "/login",
+      "path": "/auth/status",
       "public": false
     },
-    "postLogin": {
+    "startAuth": {
       "method": "POST",
-      "path": "/login",
+      "path": "/auth/start",
+      "public": false
+    },
+    "setRefreshToken": {
+      "method": "POST",
+      "path": "/auth/refresh-token",
+      "public": false
+    },
+    "signOut": {
+      "method": "POST",
+      "path": "/auth/signout",
       "public": false
     }
   }
