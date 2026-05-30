@@ -51,6 +51,19 @@
             "nl": "IP4 addres"
           },
           "value": ""
+        },
+        {
+          "id": "track_active_app",
+          "type": "checkbox",
+          "label": {
+            "en": "Track active app (keeps Xbox awake)",
+            "nl": "Volg actieve app (houdt Xbox wakker)"
+          },
+          "hint": {
+            "en": "Required for the 'app playing changed' and 'started gaming' flow triggers. When enabled, a SmartGlass session is kept open which can prevent the console from entering low-power / silent install mode.",
+            "nl": "Nodig voor de flow triggers 'actieve app veranderd' en 'begonnen met spelen'. Wanneer ingeschakeld blijft een SmartGlass-sessie open, wat kan voorkomen dat de console in standby of stille installatiemodus gaat."
+          },
+          "value": false
         }
       ]
     }

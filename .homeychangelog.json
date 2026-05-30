@@ -22,5 +22,8 @@
   },
   "0.5.4": {
     "en": "Addd support for hew device class gameconsole"
+  },
+  "0.6.0": {
+    "en": "Stability: catch malformed packets from the console so the app no longer crashes. Fast button presses: await channel-ready instead of a fixed 25s wait. Lazy session management: no persistent SmartGlass session by default, so the console can stay in low-power / silent install mode. New device setting 'Track active app' (opt-in) for users who need the 'app playing changed' and 'started gaming' flow triggers."
   }
 }
