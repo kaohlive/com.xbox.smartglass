@@ -28,5 +28,8 @@
   },
   "0.7.0": {
     "en": "Microsoft sign-in: new 'Sign in with Microsoft' button in the app settings replaces the copy-paste-the-token flow. The browser opens, you sign in, you're done. Two-factor accounts work. Advanced section keeps a paste-the-redirect-URL fallback for environments where the redirect can't reach Homey. Token plumbing is cleaner and refresh handling is more reliable."
+  },
+  "0.7.1": {
+    "en": "Adds the community forum topic and source repository so the Homey app store links the right places for support and code."
   }
 }

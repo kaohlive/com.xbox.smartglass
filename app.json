@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "0.7.0",
+  "version": "0.7.1",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -31,6 +31,8 @@
       }
     ]
   },
+  "homeyCommunityTopicId": 26223,
+  "source": "https://github.com/kaohlive/com.xbox.smartglass",
   "api": {
     "getAuthStatus": {
       "method": "GET",
