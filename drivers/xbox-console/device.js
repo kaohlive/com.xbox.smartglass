@@ -266,6 +266,29 @@ class XBoxDevice extends Homey.Device {
 		return this._inputChannelOpening;
 	}
 
+	// Send a no-op gamepad packet so the Xbox finishes binding its input
+	// handler before the user's actual button command arrives. Resolves
+	// regardless of send errors — this is a best-effort warm-up, not a
+	// hard requirement for channel readiness.
+	_primeInputChannel(cm) {
+		return new Promise((resolve) => {
+			try {
+				const Packer = require('xbox-smartglass-core-node/src/packet/packer');
+				const primer = Packer('message.gamepad');
+				primer.set('timestamp', Buffer.from('000' + Date.now().toString(), 'hex'));
+				primer.set('buttons', 0);
+				primer.setChannel(cm._channel_server_id);
+				this.client._console.get_requestnum();
+				const message = primer.pack(this.client._console);
+				this.client._send(message);
+				this.log('Sent input channel primer');
+			} catch (err) {
+				this.log('Primer send failed (non-fatal): ' + err.message);
+			}
+			this.homey.setTimeout(resolve, 250);
+		});
+	}
+
 	// Direct channel opener: sends start_channel_request right away and
 	// listens for start_channel_response, with proper listener cleanup so
 	// repeated attempts don't pile up handlers on this.client._events.
@@ -294,7 +317,11 @@ class XBoxDevice extends Homey.Device {
 					cm._channel_status = true;
 					cm._channel_server_id = payload.target_channel_id;
 					this.log('Input channel ready (request_id=' + channelClientId + ')');
-					resolve();
+					// Prime the channel: the Xbox needs ~250ms after start_channel_response
+					// to bind its input handler. Without this the first real button press
+					// is dropped and the user has to press again. We send an all-buttons-
+					// released gamepad packet so the binding completes on a no-op state.
+					this._primeInputChannel(cm).then(resolve, resolve);
 				} else {
 					reject(new Error('Console rejected channel open, result=' + payload.result));
 				}

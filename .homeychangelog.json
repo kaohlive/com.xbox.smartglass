@@ -37,5 +37,8 @@
   },
   "0.7.3": {
     "en": "Faster first controller button: replaces the channel-open path that waited for the next console_status (which can take 30s) with a direct start_channel_request that fires immediately. Console-rejected opens now surface as a real error. Power off command now sends the shutdown packet three times in quick succession so a single dropped UDP datagram no longer silently no-ops the off action. Added structured logging around channel open and power off so failures are diagnosable from the Homey app log."
+  },
+  "0.7.4": {
+    "en": "Fix: the very first controller button after a channel was opened often got dropped because the Xbox needs ~250ms after start_channel_response to finish binding its input handler. We now send a no-op gamepad packet right after the channel opens to prime the binding, so the user's actual button press lands on an already-bound channel."
   }
 }
