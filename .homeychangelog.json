@@ -31,5 +31,8 @@
   },
   "0.7.1": {
     "en": "Adds the community forum topic and source repository so the Homey app store links the right places for support and code."
+  },
+  "0.7.2": {
+    "en": "Fix: 'Track active app' now defaults to on. The previous default suppressed 'app playing changed' and 'started gaming' triggers and delayed album art until the user pressed a button. A SmartGlass session by itself does not wake the console — only adding the input control does — so keeping the session open is safe. Existing devices are migrated automatically. The first controller button after a long idle is also faster because the session is already open."
   }
 }

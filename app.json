@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -464,14 +464,14 @@
               "id": "track_active_app",
               "type": "checkbox",
               "label": {
-                "en": "Track active app (keeps Xbox awake)",
-                "nl": "Volg actieve app (houdt Xbox wakker)"
+                "en": "Track active app",
+                "nl": "Volg actieve app"
               },
               "hint": {
-                "en": "Required for the 'app playing changed' and 'started gaming' flow triggers. When enabled, a SmartGlass session is kept open which can prevent the console from entering low-power / silent install mode.",
-                "nl": "Nodig voor de flow triggers 'actieve app veranderd' en 'begonnen met spelen'. Wanneer ingeschakeld blijft een SmartGlass-sessie open, wat kan voorkomen dat de console in standby of stille installatiemodus gaat."
+                "en": "Enables the 'app playing changed' and 'started gaming' flow triggers and the currently-playing album art. Keeps a SmartGlass session (without input control) open in the background. Disable only if you observe the console waking from silent install mode.",
+                "nl": "Activeert de flow triggers 'actieve app veranderd' en 'begonnen met spelen' en de album art van de spelende app. Houdt een SmartGlass-sessie (zonder input-control) open op de achtergrond. Schakel alleen uit als je merkt dat de console wakker wordt uit silent install."
               },
-              "value": false
+              "value": true
             }
           ]
         }

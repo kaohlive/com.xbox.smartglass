@@ -29,6 +29,20 @@ class XBoxDevice extends Homey.Device {
 		if (this.getSettings().console_address == '')
 			await this.setSettings({ console_address: this.getData().address + '' });
 		this.device.address = this.getSettings().console_address;
+
+		// v0.7.2: track_active_app default flipped to true once we learned
+		// that a session by itself does not wake the console — only adding
+		// SystemInputChannel does. Devices added on v0.6.0–v0.7.1 have the
+		// old default (false) stored; migrate them once so the 'app playing
+		// changed' trigger and album art work without manual settings tweaks.
+		if (!this.getStoreValue('migrated_track_active_app')) {
+			if (this.getSettings().track_active_app !== true) {
+				await this.setSettings({ track_active_app: true });
+				this.log('Migrated track_active_app to true');
+			}
+			await this.setStoreValue('migrated_track_active_app', true);
+		}
+
 		this.log('[' + this.device.name + '] XBoxDevice (' + this.device.liveId + ':' + this.device.address + ') has been loaded');
 
 		await this._setup();
