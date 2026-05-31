@@ -8,7 +8,7 @@ const SystemInputChannel = require('xbox-smartglass-core-node/src/channels/syste
 
 const defaultAlbumArtImage = '/assets/images/{0}.png';
 const DISCOVERY_POLL_MS = 20000;
-const CHANNEL_OPEN_TIMEOUT_MS = 10000;
+const CHANNEL_OPEN_TIMEOUT_MS = 15000;
 const SESSION_IDLE_DISCONNECT_MS = 60000;
 
 class XBoxDevice extends Homey.Device {
@@ -230,9 +230,12 @@ class XBoxDevice extends Homey.Device {
 	}
 
 	// Open the SystemInputChannel and await its ready state. The library's
-	// addManager() throws away the channel-open promise and the original
-	// implementation worked around that with a hardcoded 25s sleep. We
-	// bypass addManager and wait on the actual ready event with a 10s cap.
+	// channel_manager.open() waits for an _on_console_status event before
+	// sending start_channel_request, but console_status arrives only every
+	// 5-30s in steady state — that's why the original 25s sleep existed and
+	// why our previous 10s race timed out frequently. We bypass that wait
+	// and send start_channel_request immediately, since the session is
+	// already established by the time we get here.
 	async _ensureInputChannel() {
 		await this._ensureSession();
 		const existing = this.client.getManager('system_input');
@@ -243,22 +246,16 @@ class XBoxDevice extends Homey.Device {
 		if (this._inputChannelOpening) return this._inputChannelOpening;
 
 		const channel = existing || SystemInputChannel();
-		// Wire it in manually so getManager() finds it without triggering
-		// the lib's addManager (which drops the ready-promise on the floor).
+		const channelClientId = this.client._managers_num;
 		if (!existing) {
 			this.client._managers['system_input'] = channel;
 			this.client._managers_num++;
 		}
 
-		const openPromise = channel._channel_manager.open(this.client, this.client._managers_num - 1);
-		const timeout = new Promise((_, reject) => {
-			this.homey.setTimeout(() => reject(new Error('SystemInput channel open timed out')), CHANNEL_OPEN_TIMEOUT_MS);
-		});
-
-		this._inputChannelOpening = Promise.race([openPromise, timeout])
+		this._inputChannelOpening = this._openChannelDirect(channel, channelClientId)
 			.then(() => channel)
 			.catch((err) => {
-				// On failure clear the half-installed manager so a retry can start fresh.
+				// Clear the half-installed manager so a retry can start fresh.
 				delete this.client._managers['system_input'];
 				throw err;
 			})
@@ -267,6 +264,69 @@ class XBoxDevice extends Homey.Device {
 			});
 
 		return this._inputChannelOpening;
+	}
+
+	// Direct channel opener: sends start_channel_request right away and
+	// listens for start_channel_response, with proper listener cleanup so
+	// repeated attempts don't pile up handlers on this.client._events.
+	_openChannelDirect(channel, channelClientId) {
+		return new Promise((resolve, reject) => {
+			const cm = channel._channel_manager;
+			cm._channel_client_id = channelClientId;
+			cm._smartglass = this.client;
+			cm._xbox = this.client._console;
+
+			let settled = false;
+			let timer = null;
+
+			const cleanup = () => {
+				if (timer) this.homey.clearTimeout(timer);
+				this.client._events.removeListener('_on_start_channel_response', onResponse);
+			};
+
+			const onResponse = (message) => {
+				const payload = message && message.packet_decoded && message.packet_decoded.protected_payload;
+				if (!payload || payload.channel_request_id != channelClientId) return;
+				if (settled) return;
+				settled = true;
+				cleanup();
+				if (payload.result == 0) {
+					cm._channel_status = true;
+					cm._channel_server_id = payload.target_channel_id;
+					this.log('Input channel ready (request_id=' + channelClientId + ')');
+					resolve();
+				} else {
+					reject(new Error('Console rejected channel open, result=' + payload.result));
+				}
+			};
+
+			timer = this.homey.setTimeout(() => {
+				if (settled) return;
+				settled = true;
+				cleanup();
+				reject(new Error('SystemInput channel open timed out after ' + CHANNEL_OPEN_TIMEOUT_MS + 'ms'));
+			}, CHANNEL_OPEN_TIMEOUT_MS);
+
+			this.client._events.on('_on_start_channel_response', onResponse);
+
+			try {
+				const Packer = require('xbox-smartglass-core-node/src/packet/packer');
+				const channelRequest = Packer('message.start_channel_request');
+				channelRequest.set('channel_request_id', channelClientId);
+				channelRequest.set('title_id', 0);
+				channelRequest.set('service', Buffer.from(cm._udid, 'hex'));
+				channelRequest.set('activity_id', 0);
+				this.client._console.get_requestnum();
+				const channelMessage = channelRequest.pack(this.client._console);
+				this.client._send(channelMessage);
+				this.log('Sent start_channel_request for SystemInput (request_id=' + channelClientId + ')');
+			} catch (err) {
+				if (settled) return;
+				settled = true;
+				cleanup();
+				reject(new Error('Could not send start_channel_request: ' + err.message));
+			}
+		});
 	}
 
 	_armIdleDisconnect() {
@@ -429,17 +489,16 @@ class XBoxDevice extends Homey.Device {
 			}
 		} else {
 			if (!this.client || !this.client._connection_status) {
-				// Need a session to send power-off. Open one briefly.
 				try {
 					await this._ensureSession();
 				} catch (err) {
 					this.log('Cannot power off, no session: ' + err.message);
-					return;
+					throw new Error('Power off failed: no session — ' + err.message);
 				}
 			}
 			try {
-				await this.client.powerOff();
-				this.log('Console shut down');
+				await this._powerOffRobust();
+				this.log('Power off command sent to ' + this.device.liveId);
 				this._driver.triggerConsoleOff(this);
 				this.device.powered = false;
 				this.setIfHasCapability('speaker_artist', '');
@@ -448,6 +507,47 @@ class XBoxDevice extends Homey.Device {
 			} catch (err) {
 				throw new Error('Shutdown failed: ' + (err && err.error ? err.error : err.message || err));
 			}
+		}
+	}
+
+	// Send the power_off packet directly, 3x with 200ms gaps so a single
+	// dropped UDP datagram doesn't silently no-op the shutdown. The
+	// upstream powerOff() helper only sends once and immediately
+	// disconnects, which we replicate at the end.
+	async _powerOffRobust() {
+		if (!this.client || !this.client._connection_status || !this.client._console) {
+			throw new Error('not connected');
+		}
+		const liveId = this.client._console._liveid || this.device.liveId;
+		if (!liveId) throw new Error('no liveid');
+		this.log('Sending power_off packet (liveid=' + liveId + ')');
+
+		const Packer = require('xbox-smartglass-core-node/src/packet/packer');
+		const sendOnce = (attempt) => {
+			try {
+				this.client._console.get_requestnum();
+				const pkt = Packer('message.power_off');
+				pkt.set('liveid', liveId);
+				const message = pkt.pack(this.client._console);
+				this.client._send(message);
+				this.log('power_off packet sent (attempt ' + attempt + ')');
+			} catch (err) {
+				this.log('power_off pack/send error on attempt ' + attempt + ': ' + err.message);
+			}
+		};
+
+		sendOnce(1);
+		await new Promise((r) => this.homey.setTimeout(r, 200));
+		sendOnce(2);
+		await new Promise((r) => this.homey.setTimeout(r, 200));
+		sendOnce(3);
+
+		// Give the Xbox a moment to receive the shutdown before we tear down the socket.
+		await new Promise((r) => this.homey.setTimeout(r, 800));
+		try {
+			this.client.disconnect();
+		} catch (err) {
+			this.log('disconnect after power_off failed: ' + err.message);
 		}
 	}
 

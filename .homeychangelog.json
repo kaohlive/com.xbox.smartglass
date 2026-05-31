@@ -34,5 +34,8 @@
   },
   "0.7.2": {
     "en": "Fix: 'Track active app' now defaults to on. The previous default suppressed 'app playing changed' and 'started gaming' triggers and delayed album art until the user pressed a button. A SmartGlass session by itself does not wake the console — only adding the input control does — so keeping the session open is safe. Existing devices are migrated automatically. The first controller button after a long idle is also faster because the session is already open."
+  },
+  "0.7.3": {
+    "en": "Faster first controller button: replaces the channel-open path that waited for the next console_status (which can take 30s) with a direct start_channel_request that fires immediately. Console-rejected opens now surface as a real error. Power off command now sends the shutdown packet three times in quick succession so a single dropped UDP datagram no longer silently no-ops the off action. Added structured logging around channel open and power off so failures are diagnosable from the Homey app log."
   }
 }
