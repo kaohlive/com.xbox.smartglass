@@ -6,6 +6,8 @@ cloud detour, no third-party servers.
 ## What you can do
 
 - Turn your Xbox on.
+- Turn it off (Xbox One locally; Xbox Series X / S via cloud once signed in).
+- Launch an app or game by name (requires Microsoft sign-in).
 - Press controller buttons (A, B, X, Y, View, Menu, Nexus, dpad).
 - Press media buttons (play, pause, stop, next, previous).
 - See which app or game is running, complete with box art.
@@ -27,6 +29,9 @@ it adds:
 
 - Real game and app names in the device tile.
 - Box art that matches whatever you're playing.
+- A working **Launch app or game** flow action with a searchable list
+  of what's actually installed on the chosen console.
+- Remote power off on Xbox Series X / S consoles.
 
 The sign-in opens Microsoft's normal login page in your browser. Two-step
 verification works fine.
@@ -36,12 +41,13 @@ verification works fine.
 - For "turn on" to work, your Xbox must be set to **Instant On** under
   *Settings → General → Power options*. In Energy Saving mode the console
   doesn't listen for the wake-up.
-- **Turning the console off does not work on Xbox Series X / S.** Microsoft
-  changed how remote shutdown works on those consoles and our local
-  approach can't reach it anymore. On the original Xbox One it still works.
-  *(If you really need remote shutdown on a Series console, you can use
-  the official Xbox app on your phone as a workaround.)*
-- The **Launch app** flow card is not active yet.
+- Turning the console off on Xbox Series X / S only works when you are
+  signed in with Microsoft. Microsoft changed how remote shutdown works
+  on those consoles, so the app routes the off command through Xbox Live
+  (the same path the official Xbox phone app uses). On the original Xbox
+  One the local network still does the job and sign-in is not required.
+- **Launching an app or game** also only works after Microsoft sign-in.
+  Without it, the dropdown of installed apps is empty.
 
 ## Support
 

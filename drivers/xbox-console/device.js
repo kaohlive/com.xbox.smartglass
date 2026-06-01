@@ -5,6 +5,7 @@ const Smartglass = require('xbox-smartglass-core-node');
 const fetch = require('node-fetch');
 const SystemMediaChannel = require('xbox-smartglass-core-node/src/channels/systemmedia');
 const SystemInputChannel = require('xbox-smartglass-core-node/src/channels/systeminput');
+const xboxapi = require('../../lib/xboxapi');
 
 const defaultAlbumArtImage = '/assets/images/{0}.png';
 const DISCOVERY_POLL_MS = 20000;
@@ -499,11 +500,81 @@ class XBoxDevice extends Homey.Device {
 			.catch((err) => this.log('appImage.update() (stream) failed: ' + (err && err.message ? err.message : err)));
 	}
 
-	sendLaunchAppMessage(/* appname */) {
-		// TitleLaunch packet construction is not implemented in the upstream
-		// library. Returning false so flow cards surface the failure rather
-		// than reporting bogus success.
-		return false;
+	// Resolve and cache the cloud-side console identifier for this device.
+	// The Xbox cloud API (xccs.xboxlive.com) refers to consoles by an opaque
+	// id, separate from the SmartGlass liveId. We match the cloud list to
+	// our device by id-equality first, then by name. The mapping is stored
+	// so we don't re-fetch the list on every cloud call.
+	async _getCloudConsoleId() {
+		const cached = this.getStoreValue('cloud_console_id');
+		if (cached) return cached;
+
+		const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+		if (!auth || !auth.hasRefreshToken()) {
+			throw new Error('Not signed in with Microsoft');
+		}
+		const authHeader = await auth.getAuthHeader();
+		const consoles = await xboxapi.listConsoles(authHeader);
+		this.log('cloud consoles for account: ' + consoles.map((c) => `${c.name}(${c.id})`).join(', '));
+
+		const myLiveId = (this.device.liveId || '').toUpperCase();
+		const myName = this.device.name;
+		let match = consoles.find((c) => (c.id || '').toUpperCase() === myLiveId);
+		if (!match) match = consoles.find((c) => c.name === myName);
+		if (!match) throw new Error('Console "' + myName + '" not found in your Xbox Live account');
+
+		await this.setStoreValue('cloud_console_id', match.id);
+		this.log('cached cloud console id ' + match.id + ' for ' + myName);
+		return match.id;
+	}
+
+	// Launch an app or game on the console via the Xbox cloud SmartGlass
+	// API. Arguments: a OneStore product id (e.g. "9NBLGGH4R315"). Returns
+	// true on success, false on any failure (with a log line for diagnosis).
+	async sendLaunchAppMessage(oneStoreProductId) {
+		if (!oneStoreProductId) {
+			this.log('Launch app: no oneStoreProductId given');
+			return false;
+		}
+		const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+		if (!auth || !auth.hasRefreshToken()) {
+			this.log('Launch app failed: Microsoft sign-in required (app settings)');
+			return false;
+		}
+		try {
+			const authHeader = await auth.getAuthHeader();
+			const consoleId = await this._getCloudConsoleId();
+			await xboxapi.launchAppCloud(authHeader, consoleId, oneStoreProductId);
+			this.log('Cloud launch sent: ' + oneStoreProductId + ' → ' + this.device.name);
+			return true;
+		} catch (err) {
+			this.log('Launch app failed: ' + (err && err.message ? err.message : err));
+			return false;
+		}
+	}
+
+	// Returns installed apps + games on the console for the launch-app
+	// autocomplete picker. Throws (rather than returning empty) so the
+	// Homey UI surfaces the auth or network error to the user instead of
+	// silently showing an empty dropdown.
+	async getInstalledAppsForAutocomplete(query) {
+		const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+		if (!auth || !auth.hasRefreshToken()) {
+			throw new Error('Sign in via the app settings to use launch-app');
+		}
+		const authHeader = await auth.getAuthHeader();
+		const consoleId = await this._getCloudConsoleId();
+		const items = await xboxapi.listInstalledApps(authHeader, consoleId);
+		const q = (query || '').toLowerCase().trim();
+		return items
+			.filter((it) => it && it.name && it.oneStoreProductId)
+			.filter((it) => !q || it.name.toLowerCase().includes(q))
+			.map((it) => ({
+				name: it.name,
+				description: it.contentType === 'Game' ? 'Game' : (it.contentType || ''),
+				image: it.image || undefined,
+				id: it.oneStoreProductId,
+			}));
 	}
 
 	async sendControllerButton(button) {
@@ -584,25 +655,46 @@ class XBoxDevice extends Homey.Device {
 				throw new Error('Boot failed: ' + msg);
 			}
 		} else {
-			if (!this.client || !this.client._connection_status) {
+			let dispatched = false;
+			// Try cloud power-off first when the user is signed in. Cloud
+			// works on Series X / S (where the local UDP power_off packet is
+			// silently dropped by the firmware) and is also the more
+			// reliable path on Xbox One. We fall back to UDP only when
+			// cloud is unavailable, so Xbox One users without Microsoft
+			// sign-in keep their existing local-only working flow.
+			const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+			if (auth && auth.hasRefreshToken()) {
 				try {
-					await this._ensureSession();
+					const authHeader = await auth.getAuthHeader();
+					const consoleId = await this._getCloudConsoleId();
+					await xboxapi.powerOffCloud(authHeader, consoleId);
+					this.log('Cloud power-off sent to ' + this.device.name);
+					dispatched = true;
 				} catch (err) {
-					this.log('Cannot power off, no session: ' + err.message);
-					throw new Error('Power off failed: no session — ' + err.message);
+					this.log('Cloud power-off failed, will try local UDP: ' + (err && err.message ? err.message : err));
 				}
 			}
-			try {
-				await this._powerOffRobust();
-				this.log('Power off command sent to ' + this.device.liveId);
-				this._driver.triggerConsoleOff(this);
-				this.device.powered = false;
-				this.setIfHasCapability('speaker_artist', '');
-				this.device.appImage.setPath(defaultAlbumArtImage.replace('{0}', 'App'));
-				this.device.appImage.update().catch(() => {});
-			} catch (err) {
-				throw new Error('Shutdown failed: ' + (err && err.error ? err.error : err.message || err));
+			if (!dispatched) {
+				if (!this.client || !this.client._connection_status) {
+					try {
+						await this._ensureSession();
+					} catch (err) {
+						this.log('Cannot power off, no session: ' + err.message);
+						throw new Error('Power off failed: no session — ' + err.message);
+					}
+				}
+				try {
+					await this._powerOffRobust();
+					this.log('Local power_off packet sent to ' + this.device.liveId);
+				} catch (err) {
+					throw new Error('Shutdown failed: ' + (err && err.error ? err.error : err.message || err));
+				}
 			}
+			this._driver.triggerConsoleOff(this);
+			this.device.powered = false;
+			this.setIfHasCapability('speaker_artist', '');
+			this.device.appImage.setPath(defaultAlbumArtImage.replace('{0}', 'App'));
+			this.device.appImage.update().catch(() => {});
 		}
 	}
 

@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -376,16 +376,16 @@
       {
         "id": "send-launch-app",
         "title": {
-          "en": "Launch an app",
-          "nl": "Start een app"
+          "en": "Launch an app or game",
+          "nl": "Start een app of game"
         },
         "titleFormatted": {
-          "en": "Launch app [[app_name]]",
-          "nl": "Start app [[app_name]]"
+          "en": "Launch [[app]]",
+          "nl": "Start [[app]]"
         },
         "hint": {
-          "en": "Launches an app on your console",
-          "nl": "Start een app"
+          "en": "Launches the selected app or game on the console. Requires Microsoft sign-in.",
+          "nl": "Start de geselecteerde app of game op de console. Vereist Microsoft-inlog."
         },
         "args": [
           {
@@ -394,11 +394,11 @@
             "filter": "driver_id=xbox-console"
           },
           {
-            "type": "text",
-            "name": "app_name",
+            "type": "autocomplete",
+            "name": "app",
             "placeholder": {
-              "en": "Xbox.Dashboard_8wekyb3d8bbwe!Xbox.Dashboard.Application",
-              "nl": "Xbox.Dashboard_8wekyb3d8bbwe!Xbox.Dashboard.Application"
+              "en": "Select an app",
+              "nl": "Kies een app"
             }
           }
         ]

@@ -25,8 +25,22 @@ class XBoxDriver extends Homey.Driver {
 		this.homey.flow.getActionCard('send-media-button')
 			.registerRunListener(async (args, state) => args.device.sendMediaButton(args.media_button));
 
-		this.homey.flow.getActionCard('send-launch-app')
-			.registerRunListener(async (args, state) => args.device.sendLaunchAppMessage(args.app_name));
+		const launchAppCard = this.homey.flow.getActionCard('send-launch-app');
+		launchAppCard.registerRunListener(async (args, state) => {
+			const productId = args.app && args.app.id;
+			if (!productId) throw new Error('No app selected');
+			const ok = await args.device.sendLaunchAppMessage(productId);
+			if (!ok) throw new Error('Launch failed — check the Homey app log for details');
+		});
+		launchAppCard.registerArgumentAutocompleteListener('app', async (query, args) => {
+			if (!args.device) return [];
+			try {
+				return await args.device.getInstalledAppsForAutocomplete(query);
+			} catch (err) {
+				this.error('Launch app autocomplete failed: ' + (err && err.message ? err.message : err));
+				return [];
+			}
+		});
 	}
 
 	async onPair(session) {
