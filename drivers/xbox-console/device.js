@@ -195,6 +195,13 @@ class XBoxDevice extends Homey.Device {
 
 	// Open a SmartGlass session if we don't have one. Resolves once the
 	// connection is established. Rejects if the console is not reachable.
+	//
+	// If the user is signed in via Microsoft (xboxauth) we pass the Xbox
+	// Live user hash + XSTS JWT to the connect, which the console accepts
+	// as an authenticated session. Authenticated sessions can do owner
+	// actions like power off; anonymous sessions are silently ignored for
+	// shutdown but work fine for buttons and media. Falls back to anonymous
+	// if credentials are unavailable.
 	async _ensureSession() {
 		if (this.client && this.client._connection_status) return;
 		if (this._sessionConnecting) return this._sessionConnecting;
@@ -206,9 +213,22 @@ class XBoxDevice extends Homey.Device {
 			this._buildClient();
 		}
 
-		this._sessionConnecting = this.client.connect(this.device.address)
+		let creds = null;
+		try {
+			const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+			if (auth) creds = await auth.getCredentials();
+		} catch (err) {
+			this.log('Could not fetch Xbox Live credentials, will connect anonymously: ' + err.message);
+		}
+
+		const connectPromise = creds
+			? this.client.connect(this.device.address, creds.uhs, creds.jwt)
+			: this.client.connect(this.device.address);
+
+		this._sessionConnecting = connectPromise
 			.then(() => {
-				this.log('SmartGlass session established with ' + this.device.address);
+				const mode = creds ? 'authenticated' : 'anonymous';
+				this.log('SmartGlass session established with ' + this.device.address + ' (' + mode + ')');
 				if (this.client._console && typeof this.client._console.getLiveid === 'function') {
 					const liveid = this.client._console.getLiveid();
 					this.device.liveId = liveid;

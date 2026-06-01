@@ -40,5 +40,8 @@
   },
   "0.7.4": {
     "en": "Fix: the very first controller button after a channel was opened often got dropped because the Xbox needs ~250ms after start_channel_response to finish binding its input handler. We now send a no-op gamepad packet right after the channel opens to prime the binding, so the user's actual button press lands on an already-bound channel."
+  },
+  "0.7.5": {
+    "en": "Fix: power off now actually works. The SmartGlass session is upgraded from anonymous to authenticated when you are signed in via 'Sign in with Microsoft' in the app settings — passing the Xbox Live user hash and XSTS token to the connect. The console silently ignores power_off from anonymous sessions, which is why earlier attempts went nowhere. If you are not signed in the session stays anonymous and buttons / media still work, but power off won't."
   }
 }
