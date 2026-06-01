@@ -4,6 +4,7 @@ const Homey = require('homey');
 const fetch = require('node-fetch');
 const XboxAuth = require('./lib/xboxauth');
 const XblPoller = require('./lib/xblpoller');
+const xboxapi = require('./lib/xboxapi');
 
 const TRACK_PROFILE_SETTING = 'track_xbl_profile';
 const FALLBACK_ART_PATH = '/assets/images/App.png';
@@ -23,6 +24,21 @@ class XBoxSmartglass extends Homey.App {
 		this._flowTriggerFriendOnline = this.homey.flow.getTriggerCard('friend-online');
 		this._flowTriggerFriendOffline = this.homey.flow.getTriggerCard('friend-offline');
 
+		// Filtered variants of friend-online / friend-offline. Same tokens,
+		// extra autocomplete arg that picks one friend by xuid. The poller
+		// fires both the generic and the specific card; the run listener
+		// drops the specific one unless the picked friend matches.
+		this._flowTriggerSpecificFriendOnline = this.homey.flow.getTriggerCard('specific-friend-online');
+		this._flowTriggerSpecificFriendOffline = this.homey.flow.getTriggerCard('specific-friend-offline');
+		this._flowTriggerSpecificFriendOnline.registerRunListener(async (args, state) => {
+			return !!(args && args.friend && state && args.friend.id === state.xuid);
+		});
+		this._flowTriggerSpecificFriendOffline.registerRunListener(async (args, state) => {
+			return !!(args && args.friend && state && args.friend.id === state.xuid);
+		});
+		this._flowTriggerSpecificFriendOnline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+		this._flowTriggerSpecificFriendOffline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+
 		this.poller.on('achievement', async (data) => {
 			try {
 				const image = await this._makeRemoteImage(data.achievement_art_url);
@@ -40,14 +56,18 @@ class XBoxSmartglass extends Homey.App {
 		this.poller.on('friend-online', async (data) => {
 			try {
 				const image = await this._makeRemoteImage(data.friend_gamerpic_url);
-				await this._flowTriggerFriendOnline.trigger({
+				const tokens = {
 					friend_gamertag: data.friend_gamertag || '',
 					friend_display_name: data.friend_display_name || '',
 					friend_title_name: data.friend_title_name || '',
 					friend_presence_text: data.friend_presence_text || '',
 					friend_gamerpic_url: data.friend_gamerpic_url || '',
 					friend_gamerpic_image: image,
-				});
+				};
+				await Promise.all([
+					this._flowTriggerFriendOnline.trigger(tokens),
+					this._flowTriggerSpecificFriendOnline.trigger(tokens, { xuid: data.friend_xuid }),
+				]);
 			} catch (err) {
 				this.log('friend-online trigger fire failed: ' + err.message);
 			}
@@ -55,13 +75,17 @@ class XBoxSmartglass extends Homey.App {
 		this.poller.on('friend-offline', async (data) => {
 			try {
 				const image = await this._makeRemoteImage(data.friend_gamerpic_url);
-				await this._flowTriggerFriendOffline.trigger({
+				const tokens = {
 					friend_gamertag: data.friend_gamertag || '',
 					friend_display_name: data.friend_display_name || '',
 					friend_last_title_name: data.friend_last_title_name || '',
 					friend_gamerpic_url: data.friend_gamerpic_url || '',
 					friend_gamerpic_image: image,
-				});
+				};
+				await Promise.all([
+					this._flowTriggerFriendOffline.trigger(tokens),
+					this._flowTriggerSpecificFriendOffline.trigger(tokens, { xuid: data.friend_xuid }),
+				]);
 			} catch (err) {
 				this.log('friend-offline trigger fire failed: ' + err.message);
 			}
@@ -106,6 +130,35 @@ class XBoxSmartglass extends Homey.App {
 
 	getPoller() {
 		return this.poller;
+	}
+
+	// Friend autocomplete for the specific-friend triggers. Pulls the
+	// peoplehub list (same call the poller already uses) and maps to the
+	// shape Homey expects: { name, description, image, id }. id == xuid
+	// so the run listener can match against the poller's state.xuid.
+	async _friendAutocomplete(query) {
+		if (!this.auth.hasRefreshToken()) return [];
+		try {
+			const authHeader = await this.auth.getAuthHeader();
+			const friends = await xboxapi.getFriendsPresence(authHeader);
+			const q = (query || '').toString().trim().toLowerCase();
+			const items = friends
+				.filter((f) => f && f.xuid)
+				.map((f) => ({
+					name: f.gamertag || f.displayName || f.xuid,
+					description: f.displayName && f.displayName !== f.gamertag ? f.displayName : '',
+					image: f.displayPicRaw || undefined,
+					id: f.xuid,
+				}))
+				.filter((item) => !q
+					|| item.name.toLowerCase().includes(q)
+					|| (item.description && item.description.toLowerCase().includes(q)));
+			items.sort((a, b) => a.name.localeCompare(b.name));
+			return items;
+		} catch (err) {
+			this.log('Friend autocomplete failed: ' + err.message);
+			return [];
+		}
 	}
 
 	// Build a Homey Image whose source is a remote URL. If the URL is

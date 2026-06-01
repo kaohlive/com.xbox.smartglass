@@ -70,5 +70,8 @@
   },
   "1.2.3": {
     "en": "New flow trigger 'Friend went offline' — fires when one of your Xbox Live friends transitions from online to offline. Includes a 'Last game they were playing' token so you know what they were doing just before they signed off, alongside the same gamertag, display name and gamerpic (URL + binary) tokens as the came-online trigger."
+  },
+  "1.2.4": {
+    "en": "Two new filtered flow triggers: 'A specific friend came online' and 'A specific friend went offline'. Pick the friend from a searchable dropdown — the flow only fires for that one person, so you can build 'when [partner] comes online, do X' without a When-card with an If-check. Same tokens as the generic friend triggers (gamertag, display name, game, gamerpic URL + binary). The generic 'Friend came online' / 'Friend went offline' triggers are unchanged."
   }
 }

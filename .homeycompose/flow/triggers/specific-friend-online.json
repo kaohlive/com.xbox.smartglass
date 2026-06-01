@@ -1,0 +1,30 @@
+{
+  "title": {
+    "en": "A specific friend came online",
+    "nl": "Een specifieke vriend kwam online"
+  },
+  "titleFormatted": {
+    "en": "Friend [[friend]] came online",
+    "nl": "Vriend [[friend]] kwam online"
+  },
+  "hint": {
+    "en": "Fires when a specific Xbox Live friend transitions from offline to online. Pick the friend in the dropdown. Requires 'Track Xbox Live profile' to be enabled in the app settings.",
+    "nl": "Wordt geactiveerd wanneer een specifieke Xbox Live vriend van offline naar online gaat. Kies de vriend in het dropdown. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen."
+  },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "friend",
+      "title": { "en": "Friend", "nl": "Vriend" },
+      "placeholder": { "en": "Search by gamertag…", "nl": "Zoek op gamertag…" }
+    }
+  ],
+  "tokens": [
+    { "type": "string", "name": "friend_gamertag", "title": { "en": "Friend gamertag", "nl": "Vriend gamertag" } },
+    { "type": "string", "name": "friend_display_name", "title": { "en": "Friend display name", "nl": "Vriend weergavenaam" } },
+    { "type": "string", "name": "friend_title_name", "title": { "en": "Game they're playing", "nl": "Game die ze spelen" } },
+    { "type": "string", "name": "friend_presence_text", "title": { "en": "Presence text", "nl": "Aanwezigheidstekst" } },
+    { "type": "string", "name": "friend_gamerpic_url", "title": { "en": "Friend gamerpic URL", "nl": "Vriend gamerpic URL" } },
+    { "type": "image", "name": "friend_gamerpic_image", "title": { "en": "Friend gamerpic", "nl": "Vriend gamerpic" } }
+  ]
+}
