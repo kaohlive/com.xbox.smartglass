@@ -15,6 +15,7 @@
     { "type": "string", "name": "title_name", "title": { "en": "Game name", "nl": "Game naam" } },
     { "type": "string", "name": "achievement_name", "title": { "en": "Achievement name", "nl": "Achievement naam" } },
     { "type": "number", "name": "gamerscore_awarded", "title": { "en": "Gamerscore awarded", "nl": "Gamerscore toegekend" } },
-    { "type": "string", "name": "achievement_art_url", "title": { "en": "Achievement art URL", "nl": "Achievement art URL" } }
+    { "type": "string", "name": "achievement_art_url", "title": { "en": "Achievement art URL", "nl": "Achievement art URL" } },
+    { "type": "image", "name": "achievement_art_image", "title": { "en": "Achievement art", "nl": "Achievement art" } }
   ]
 }

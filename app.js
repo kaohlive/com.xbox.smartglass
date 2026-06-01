@@ -1,10 +1,12 @@
 'use strict';
 
 const Homey = require('homey');
+const fetch = require('node-fetch');
 const XboxAuth = require('./lib/xboxauth');
 const XblPoller = require('./lib/xblpoller');
 
 const TRACK_PROFILE_SETTING = 'track_xbl_profile';
+const FALLBACK_ART_PATH = '/assets/images/App.png';
 
 class XBoxSmartglass extends Homey.App {
 
@@ -20,21 +22,34 @@ class XBoxSmartglass extends Homey.App {
 		this._flowTriggerAchievement = this.homey.flow.getTriggerCard('achievement-unlocked');
 		this._flowTriggerFriendOnline = this.homey.flow.getTriggerCard('friend-online');
 
-		this.poller.on('achievement', (data) => {
-			this._flowTriggerAchievement.trigger({
-				title_name: data.title_name || '',
-				achievement_name: data.achievement_name || '',
-				gamerscore_awarded: data.gamerscore_awarded || 0,
-				achievement_art_url: data.achievement_art_url || '',
-			}).catch((err) => this.log('achievement trigger fire failed: ' + err.message));
+		this.poller.on('achievement', async (data) => {
+			try {
+				const image = await this._makeRemoteImage(data.achievement_art_url);
+				await this._flowTriggerAchievement.trigger({
+					title_name: data.title_name || '',
+					achievement_name: data.achievement_name || '',
+					gamerscore_awarded: data.gamerscore_awarded || 0,
+					achievement_art_url: data.achievement_art_url || '',
+					achievement_art_image: image,
+				});
+			} catch (err) {
+				this.log('achievement trigger fire failed: ' + err.message);
+			}
 		});
-		this.poller.on('friend-online', (data) => {
-			this._flowTriggerFriendOnline.trigger({
-				friend_gamertag: data.friend_gamertag || '',
-				friend_display_name: data.friend_display_name || '',
-				friend_title_name: data.friend_title_name || '',
-				friend_presence_text: data.friend_presence_text || '',
-			}).catch((err) => this.log('friend-online trigger fire failed: ' + err.message));
+		this.poller.on('friend-online', async (data) => {
+			try {
+				const image = await this._makeRemoteImage(data.friend_gamerpic_url);
+				await this._flowTriggerFriendOnline.trigger({
+					friend_gamertag: data.friend_gamertag || '',
+					friend_display_name: data.friend_display_name || '',
+					friend_title_name: data.friend_title_name || '',
+					friend_presence_text: data.friend_presence_text || '',
+					friend_gamerpic_url: data.friend_gamerpic_url || '',
+					friend_gamerpic_image: image,
+				});
+			} catch (err) {
+				this.log('friend-online trigger fire failed: ' + err.message);
+			}
 		});
 
 		// Gamerscore is mirrored to each device tile and lives in the
@@ -76,6 +91,24 @@ class XBoxSmartglass extends Homey.App {
 
 	getPoller() {
 		return this.poller;
+	}
+
+	// Build a Homey Image whose source is a remote URL. If the URL is
+	// missing or the fetch fails the image falls back to a packaged
+	// placeholder so the token is always a valid Image and downstream
+	// flow steps don't crash.
+	async _makeRemoteImage(url) {
+		const image = await this.homey.images.createImage();
+		if (url) {
+			image.setStream(async (stream) => {
+				const res = await fetch(url);
+				if (!res.ok) throw new Error('image fetch ' + res.status);
+				return res.body.pipe(stream);
+			});
+		} else {
+			image.setPath(FALLBACK_ART_PATH);
+		}
+		return image;
 	}
 
 	_notifyDevicesTrackingChanged() {
