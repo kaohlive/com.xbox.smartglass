@@ -21,6 +21,7 @@ class XBoxSmartglass extends Homey.App {
 		// account-wide and we honour that here.
 		this._flowTriggerAchievement = this.homey.flow.getTriggerCard('achievement-unlocked');
 		this._flowTriggerFriendOnline = this.homey.flow.getTriggerCard('friend-online');
+		this._flowTriggerFriendOffline = this.homey.flow.getTriggerCard('friend-offline');
 
 		this.poller.on('achievement', async (data) => {
 			try {
@@ -49,6 +50,20 @@ class XBoxSmartglass extends Homey.App {
 				});
 			} catch (err) {
 				this.log('friend-online trigger fire failed: ' + err.message);
+			}
+		});
+		this.poller.on('friend-offline', async (data) => {
+			try {
+				const image = await this._makeRemoteImage(data.friend_gamerpic_url);
+				await this._flowTriggerFriendOffline.trigger({
+					friend_gamertag: data.friend_gamertag || '',
+					friend_display_name: data.friend_display_name || '',
+					friend_last_title_name: data.friend_last_title_name || '',
+					friend_gamerpic_url: data.friend_gamerpic_url || '',
+					friend_gamerpic_image: image,
+				});
+			} catch (err) {
+				this.log('friend-offline trigger fire failed: ' + err.message);
 			}
 		});
 

@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -113,6 +113,63 @@
           }
         ],
         "id": "achievement-unlocked"
+      },
+      {
+        "title": {
+          "en": "Friend went offline",
+          "nl": "Vriend ging offline"
+        },
+        "titleFormatted": {
+          "en": "Friend went offline",
+          "nl": "Vriend ging offline"
+        },
+        "hint": {
+          "en": "Fires when one of your Xbox Live friends transitions from online to offline. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console — it fires once regardless of how many Xbox devices you have.",
+          "nl": "Wordt geactiveerd wanneer een van je Xbox Live vrienden van online naar offline gaat. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console — het vuurt één keer ongeacht hoeveel Xbox apparaten je hebt."
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "friend_gamertag",
+            "title": {
+              "en": "Friend gamertag",
+              "nl": "Vriend gamertag"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_display_name",
+            "title": {
+              "en": "Friend display name",
+              "nl": "Vriend weergavenaam"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_last_title_name",
+            "title": {
+              "en": "Last game they were playing",
+              "nl": "Laatste game die ze speelden"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_gamerpic_url",
+            "title": {
+              "en": "Friend gamerpic URL",
+              "nl": "Vriend gamerpic URL"
+            }
+          },
+          {
+            "type": "image",
+            "name": "friend_gamerpic_image",
+            "title": {
+              "en": "Friend gamerpic",
+              "nl": "Vriend gamerpic"
+            }
+          }
+        ],
+        "id": "friend-offline"
       },
       {
         "title": {

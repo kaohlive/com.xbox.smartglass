@@ -67,5 +67,8 @@
   },
   "1.2.2": {
     "en": "Two friend-presence fixes. The trigger no longer fires repeatedly while a friend bounces between Online and Away/Idle states — anything that isn't explicitly offline now counts as present, so one transition fires once. And the 'Game they're playing' token is no longer blank: the presenceDetails entries from Microsoft's peoplehub use PascalCase field names and we now read those correctly, plus we prefer the entry actually flagged as a game over arbitrary list order."
+  },
+  "1.2.3": {
+    "en": "New flow trigger 'Friend went offline' — fires when one of your Xbox Live friends transitions from online to offline. Includes a 'Last game they were playing' token so you know what they were doing just before they signed off, alongside the same gamertag, display name and gamerpic (URL + binary) tokens as the came-online trigger."
   }
 }
