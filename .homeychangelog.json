@@ -52,5 +52,8 @@
   },
   "0.7.8": {
     "en": "Several reliability fixes for setups with multiple consoles. Refresh-token rotation is now serialized so multiple devices starting up in parallel no longer hit the Microsoft token endpoint N times in a row. Session opening is also serialized so concurrent _ensureSession calls share one connect attempt — duplicate session-established lines are gone. Malformed-packet warnings from the underlying library (seen on Series X firmware) are throttled to one warning per minute with a count of suppressed duplicates, so the Homey app log stays readable."
+  },
+  "1.0.0": {
+    "en": "First stable release. Highlights since the previous public version: one-click Sign in with Microsoft (no more copy-pasting a token), persistent sign-in across restarts, current game and box art shown on the device tile, fast and reliable controller buttons (first press now lands in under a second), no longer keeps the console awake during silent installs, and the app no longer crashes on packets from newer Xbox firmware. Known limitation: turning the console off is not supported on Xbox Series X / S — Microsoft moved that to a cloud channel that this app does not use. Power off still works on the original Xbox One."
   }
 }
