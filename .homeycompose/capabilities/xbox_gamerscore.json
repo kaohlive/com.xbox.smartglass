@@ -11,5 +11,6 @@
   },
   "getable": true,
   "setable": false,
-  "uiComponent": "sensor"
+  "uiComponent": "sensor",
+  "icon": "./assets/nexus.svg"
 }
