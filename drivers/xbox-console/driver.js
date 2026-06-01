@@ -75,28 +75,16 @@ class XBoxDriver extends Homey.Driver {
 	}
 
 	triggerConsoleOn(device) {
-		this._flowTriggerConsoleOn
-			.trigger(device, {}, {})
-			.then(this.log)
-			.catch(this.error);
+		this._flowTriggerConsoleOn.trigger(device, {}, {}).catch(this.error);
 	}
 	triggerConsoleOff(device) {
-		this._flowTriggerConsoleOff
-			.trigger(device, {}, {})
-			.then(this.log)
-			.catch(this.error);
+		this._flowTriggerConsoleOff.trigger(device, {}, {}).catch(this.error);
 	}
 	triggerAppChange(device, tokens) {
-		this._flowTriggerAppChange
-			.trigger(device, tokens, {})
-			.then(this.log)
-			.catch(this.error);
+		this._flowTriggerAppChange.trigger(device, tokens, {}).catch(this.error);
 	}
 	triggerGameStarted(device) {
-		this._flowTriggerGameStarted
-			.trigger(device, {}, {})
-			.then(this.log)
-			.catch(this.error);
+		this._flowTriggerGameStarted.trigger(device, {}, {}).catch(this.error);
 	}
 
 

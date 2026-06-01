@@ -46,5 +46,8 @@
   },
   "0.7.6": {
     "en": "Surface album art / game art failures in the app log. Two silent .catch(()=>{}) blocks were hiding titlehub auth issues, CDN failures and image-update errors, making missing artwork undiagnosable. Every step of the active-app detection pipeline now logs the AUM ID, titlehub response, image URL and fetch result so the cause of a blank cover shows up directly in the Homey app log."
+  },
+  "0.7.7": {
+    "en": "Fix: Microsoft sign-in now persists across app restarts. The previous OAuth scope used 'XboxLive.offline_access' which Microsoft did not honor, so MS returned an access token but no refresh token — the sign-in appeared successful but album art and power-off stopped working as soon as the access token expired. Now uses the standard 'offline_access' scope, which returns a proper refresh token. After updating: open the app settings and click 'Sign in with Microsoft' once more. Also cleans up some stray 'undefined' log lines from flow-trigger handlers."
   }
 }
