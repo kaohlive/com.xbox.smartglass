@@ -41,6 +41,15 @@ class XBoxDriver extends Homey.Driver {
 				return [];
 			}
 		});
+
+		// The gamerscore reading is per-account but we mirror it onto every
+		// Xbox device tile that has opted into profile tracking, so the
+		// user sees their score on whichever console they look at.
+		// Achievement and friend-online events are also account-scoped and
+		// are registered as app-level triggers in app.js — not here.
+		this.homey.app.on('xbl:gamerscore', (data) => {
+			for (const device of this.getDevices()) device.updateGamerscoreFromPoller(data.gamerscore);
+		});
 	}
 
 	async onPair(session) {

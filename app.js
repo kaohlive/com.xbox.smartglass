@@ -2,25 +2,96 @@
 
 const Homey = require('homey');
 const XboxAuth = require('./lib/xboxauth');
+const XblPoller = require('./lib/xblpoller');
+
+const TRACK_PROFILE_SETTING = 'track_xbl_profile';
 
 class XBoxSmartglass extends Homey.App {
 
 	async onInit() {
 		this.log('XBox Smartglass app is running...');
 		this.auth = new XboxAuth(this.homey, this.log.bind(this));
+		this.poller = new XblPoller(this.homey, this.auth, this.log.bind(this));
 
-		// Warm the chain in the background so the first titlehub call
-		// doesn't pay the full OAuth round-trip. Failures are non-fatal —
-		// the user just hasn't signed in yet, or the refresh token died.
+		// Achievement and friend-online are app-level (account-scoped)
+		// triggers, not per-device. With multiple Xboxes you don't want
+		// one achievement to fire N flows; the underlying event is
+		// account-wide and we honour that here.
+		this._flowTriggerAchievement = this.homey.flow.getTriggerCard('achievement-unlocked');
+		this._flowTriggerFriendOnline = this.homey.flow.getTriggerCard('friend-online');
+
+		this.poller.on('achievement', (data) => {
+			this._flowTriggerAchievement.trigger({
+				title_name: data.title_name || '',
+				achievement_name: data.achievement_name || '',
+				gamerscore_awarded: data.gamerscore_awarded || 0,
+				achievement_art_url: data.achievement_art_url || '',
+			}).catch((err) => this.log('achievement trigger fire failed: ' + err.message));
+		});
+		this.poller.on('friend-online', (data) => {
+			this._flowTriggerFriendOnline.trigger({
+				friend_gamertag: data.friend_gamertag || '',
+				friend_display_name: data.friend_display_name || '',
+				friend_title_name: data.friend_title_name || '',
+				friend_presence_text: data.friend_presence_text || '',
+			}).catch((err) => this.log('friend-online trigger fire failed: ' + err.message));
+		});
+
+		// Gamerscore is mirrored to each device tile and lives in the
+		// driver layer because it's a capability value, not a trigger.
+		this.poller.on('gamerscore', (d) => this.emit('xbl:gamerscore', d));
+
+		// Warm the auth chain in the background so the first cloud call
+		// doesn't pay the full OAuth round-trip. Failures are non-fatal.
 		if (this.auth.hasRefreshToken()) {
 			this.auth.getAuthHeader().catch((err) => {
 				this.log('Initial auth warmup failed (re-auth may be needed): ' + err.message);
 			});
 		}
+
+		// Start the poller if the user opted in. If they toggle it later
+		// the settings handler below picks that up.
+		if (this.isTrackingProfile() && this.auth.hasRefreshToken()) {
+			this.poller.start();
+		}
+
+		this.homey.settings.on('set', (key) => {
+			if (key !== TRACK_PROFILE_SETTING) return;
+			if (this.isTrackingProfile() && this.auth.hasRefreshToken()) {
+				this.poller.start();
+			} else {
+				this.poller.stop();
+			}
+			this._notifyDevicesTrackingChanged();
+		});
+	}
+
+	isTrackingProfile() {
+		return this.homey.settings.get(TRACK_PROFILE_SETTING) === true;
 	}
 
 	getAuth() {
 		return this.auth;
+	}
+
+	getPoller() {
+		return this.poller;
+	}
+
+	_notifyDevicesTrackingChanged() {
+		try {
+			const driver = this.homey.drivers.getDriver('xbox-console');
+			if (!driver) return;
+			for (const device of driver.getDevices()) {
+				if (typeof device.onTrackingChanged === 'function') {
+					device.onTrackingChanged(this.isTrackingProfile()).catch((err) => {
+						this.log('onTrackingChanged failed for device: ' + err.message);
+					});
+				}
+			}
+		} catch (err) {
+			this.log('Could not notify devices of tracking change: ' + err.message);
+		}
 	}
 }
 

@@ -1,0 +1,20 @@
+{
+  "title": {
+    "en": "Friend came online",
+    "nl": "Vriend kwam online"
+  },
+  "titleFormatted": {
+    "en": "Friend came online",
+    "nl": "Vriend kwam online"
+  },
+  "hint": {
+    "en": "Fires when one of your Xbox Live friends transitions from offline to online. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console — it fires once regardless of how many Xbox devices you have.",
+    "nl": "Wordt geactiveerd wanneer een van je Xbox Live vrienden van offline naar online gaat. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console — het vuurt één keer ongeacht hoeveel Xbox apparaten je hebt."
+  },
+  "tokens": [
+    { "type": "string", "name": "friend_gamertag", "title": { "en": "Friend gamertag", "nl": "Vriend gamertag" } },
+    { "type": "string", "name": "friend_display_name", "title": { "en": "Friend display name", "nl": "Vriend weergavenaam" } },
+    { "type": "string", "name": "friend_title_name", "title": { "en": "Game they're playing", "nl": "Game die ze spelen" } },
+    { "type": "string", "name": "friend_presence_text", "title": { "en": "Presence text", "nl": "Aanwezigheidstekst" } }
+  ]
+}

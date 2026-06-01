@@ -58,5 +58,8 @@
   },
   "1.1.0": {
     "en": "Two cloud-powered additions, both unlocked by Microsoft sign-in. The 'Launch an app or game' flow action finally works, with a live dropdown of what is actually installed on the selected console — no more guessing AUM IDs. And turning a Series X / S off now goes through the same cloud channel the official Xbox phone app uses, so it actually shuts the console down. Local-first behaviour is preserved: nothing new runs in the background, sign-in is still optional, and Xbox One keeps using the local network for power off."
+  },
+  "1.2.0": {
+    "en": "Optional Xbox Live profile tracking. Enable 'Track Xbox Live profile' in the app settings to add a Gamerscore tile to your Xbox devices and unlock two new flow triggers: 'Achievement unlocked' (fires when you earn an achievement, with tokens for the game, the achievement name, gamerscore awarded and art) and 'Friend came online' (fires when one of your Xbox Live friends transitions to online, with their gamertag and current game as tokens). This adds about one Xbox Live API call per minute when enabled. Off by default. Also: power-on now falls back to the cloud WakeUp command if the local magic packet doesn't reach the console (useful when the console moved to a different IP or sits behind a VLAN), provided you are signed in."
   }
 }

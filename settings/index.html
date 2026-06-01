@@ -29,6 +29,20 @@
     <button id="authorize" class="homey-button-primary-full">Sign in with Microsoft</button>
     <button id="signout" class="homey-button-secondary-full" style="display:none; margin-top:8px;">Sign out</button>
 
+    <fieldset id="trackProfileSection" style="margin-top: 28px; border: none; padding: 0; display: none;">
+        <legend style="padding: 0; margin-bottom: 8px; font-weight: 600;">Xbox Live profile tracking</legend>
+        <p style="margin: 0 0 12px 0; font-size: 13px; color: #5f6368;">
+            Adds background polling of your Xbox Live profile so Homey can react to achievements you unlock, friends coming online, and gamerscore changes.
+            Adds a "Gamerscore" tile to each Xbox device and makes the
+            <em>Achievement unlocked</em> and <em>Friend came online</em>
+            flow triggers available. Polls about once a minute.
+        </p>
+        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer;">
+            <input id="trackProfile" type="checkbox" />
+            <span>Track Xbox Live profile (background polling)</span>
+        </label>
+    </fieldset>
+
     <details id="advanced">
         <summary>Advanced — paste a refresh token manually</summary>
         <div class="advanced-body">
@@ -62,12 +76,16 @@
                 statusEl.innerHTML = message;
             }
 
+            const trackProfileSection = document.getElementById('trackProfileSection');
+            const trackProfileCheckbox = document.getElementById('trackProfile');
+
             function refreshStatus() {
                 Homey.api('GET', '/auth/status', null, (err, result) => {
                     if (err) {
                         setStatus('disconnected', 'Error checking status: ' + (err.message || err));
                         authorizeBtn.style.display = '';
                         signoutBtn.style.display = 'none';
+                        trackProfileSection.style.display = 'none';
                         return;
                     }
                     if (result && result.authenticated) {
@@ -75,14 +93,25 @@
                         setStatus('connected', 'Signed in' + tag + '.');
                         authorizeBtn.style.display = 'none';
                         signoutBtn.style.display = '';
+                        trackProfileSection.style.display = '';
                     } else {
                         const detail = result && result.error ? ' (' + result.error + ')' : '';
                         setStatus('disconnected', 'Not signed in.' + detail);
                         authorizeBtn.style.display = '';
                         signoutBtn.style.display = 'none';
+                        trackProfileSection.style.display = 'none';
                     }
                 });
             }
+
+            Homey.get('track_xbl_profile', (err, value) => {
+                if (!err) trackProfileCheckbox.checked = value === true;
+            });
+            trackProfileCheckbox.addEventListener('change', () => {
+                Homey.set('track_xbl_profile', trackProfileCheckbox.checked, (err) => {
+                    if (err) Homey.alert('Could not save setting: ' + (err.message || err));
+                });
+            });
 
             Homey.on('authorized', () => {
                 refreshStatus();

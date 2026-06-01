@@ -1,0 +1,15 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Gamerscore",
+    "nl": "Gamerscore"
+  },
+  "decimals": 0,
+  "units": {
+    "en": "G",
+    "nl": "G"
+  },
+  "getable": true,
+  "setable": false,
+  "uiComponent": "sensor"
+}

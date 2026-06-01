@@ -32,9 +32,29 @@ it adds:
 - A working **Launch app or game** flow action with a searchable list
   of what's actually installed on the chosen console.
 - Remote power off on Xbox Series X / S consoles.
+- Cloud fallback when the wake-on-LAN packet can't reach the console
+  (different VLAN, changed IP, etc.).
 
 The sign-in opens Microsoft's normal login page in your browser. Two-step
 verification works fine.
+
+## Optional: Xbox Live profile tracking
+
+After signing in, the settings page shows a second toggle:
+**"Track Xbox Live profile (background polling)"**. Turn it on and the
+app starts polling your Xbox Live profile about once a minute, which
+unlocks:
+
+- A **Gamerscore** tile on every Xbox device.
+- A flow trigger **"Achievement unlocked"** with the game name,
+  achievement name, gamerscore awarded, and the achievement art URL.
+- A flow trigger **"Friend came online"** with your friend's gamertag,
+  display name, and what they're playing.
+
+These two triggers are intentionally not per-device — they fire once for
+an event on your account, regardless of how many consoles you've added.
+
+Leave the toggle off and nothing extra runs in the background.
 
 ## Good to know
 

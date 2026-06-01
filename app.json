@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -57,6 +57,104 @@
   },
   "flow": {
     "triggers": [
+      {
+        "title": {
+          "en": "Achievement unlocked",
+          "nl": "Achievement vrijgespeeld"
+        },
+        "titleFormatted": {
+          "en": "Achievement unlocked",
+          "nl": "Achievement vrijgespeeld"
+        },
+        "hint": {
+          "en": "Fires when the signed-in Microsoft account unlocks an Xbox achievement. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console — it fires once regardless of how many Xbox devices you have.",
+          "nl": "Wordt geactiveerd wanneer het ingelogde Microsoft-account een Xbox achievement vrijspeelt. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console — het vuurt één keer ongeacht hoeveel Xbox apparaten je hebt."
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "title_name",
+            "title": {
+              "en": "Game name",
+              "nl": "Game naam"
+            }
+          },
+          {
+            "type": "string",
+            "name": "achievement_name",
+            "title": {
+              "en": "Achievement name",
+              "nl": "Achievement naam"
+            }
+          },
+          {
+            "type": "number",
+            "name": "gamerscore_awarded",
+            "title": {
+              "en": "Gamerscore awarded",
+              "nl": "Gamerscore toegekend"
+            }
+          },
+          {
+            "type": "string",
+            "name": "achievement_art_url",
+            "title": {
+              "en": "Achievement art URL",
+              "nl": "Achievement art URL"
+            }
+          }
+        ],
+        "id": "achievement-unlocked"
+      },
+      {
+        "title": {
+          "en": "Friend came online",
+          "nl": "Vriend kwam online"
+        },
+        "titleFormatted": {
+          "en": "Friend came online",
+          "nl": "Vriend kwam online"
+        },
+        "hint": {
+          "en": "Fires when one of your Xbox Live friends transitions from offline to online. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console — it fires once regardless of how many Xbox devices you have.",
+          "nl": "Wordt geactiveerd wanneer een van je Xbox Live vrienden van offline naar online gaat. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console — het vuurt één keer ongeacht hoeveel Xbox apparaten je hebt."
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "friend_gamertag",
+            "title": {
+              "en": "Friend gamertag",
+              "nl": "Vriend gamertag"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_display_name",
+            "title": {
+              "en": "Friend display name",
+              "nl": "Vriend weergavenaam"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_title_name",
+            "title": {
+              "en": "Game they're playing",
+              "nl": "Game die ze spelen"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_presence_text",
+            "title": {
+              "en": "Presence text",
+              "nl": "Aanwezigheidstekst"
+            }
+          }
+        ],
+        "id": "friend-online"
+      },
       {
         "id": "started-gaming",
         "title": {
@@ -588,6 +686,21 @@
       "setable": true,
       "uiComponent": "button",
       "uiQuickAction": true
+    },
+    "xbox_gamerscore": {
+      "type": "number",
+      "title": {
+        "en": "Gamerscore",
+        "nl": "Gamerscore"
+      },
+      "decimals": 0,
+      "units": {
+        "en": "G",
+        "nl": "G"
+      },
+      "getable": true,
+      "setable": false,
+      "uiComponent": "sensor"
     }
   }
 }

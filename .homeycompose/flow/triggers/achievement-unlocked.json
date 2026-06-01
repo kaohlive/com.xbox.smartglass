@@ -1,0 +1,20 @@
+{
+  "title": {
+    "en": "Achievement unlocked",
+    "nl": "Achievement vrijgespeeld"
+  },
+  "titleFormatted": {
+    "en": "Achievement unlocked",
+    "nl": "Achievement vrijgespeeld"
+  },
+  "hint": {
+    "en": "Fires when the signed-in Microsoft account unlocks an Xbox achievement. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console — it fires once regardless of how many Xbox devices you have.",
+    "nl": "Wordt geactiveerd wanneer het ingelogde Microsoft-account een Xbox achievement vrijspeelt. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console — het vuurt één keer ongeacht hoeveel Xbox apparaten je hebt."
+  },
+  "tokens": [
+    { "type": "string", "name": "title_name", "title": { "en": "Game name", "nl": "Game naam" } },
+    { "type": "string", "name": "achievement_name", "title": { "en": "Achievement name", "nl": "Achievement naam" } },
+    { "type": "number", "name": "gamerscore_awarded", "title": { "en": "Gamerscore awarded", "nl": "Gamerscore toegekend" } },
+    { "type": "string", "name": "achievement_art_url", "title": { "en": "Achievement art URL", "nl": "Achievement art URL" } }
+  ]
+}

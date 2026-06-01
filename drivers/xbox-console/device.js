@@ -109,12 +109,51 @@ class XBoxDevice extends Homey.Device {
 
 	async _setup() {
 		await this._registerCapability();
+		await this._syncTrackingCapability();
 		this._startDiscoveryLoop();
 		this.setAvailable();
 
 		if (this._shouldTrackActiveApp()) {
 			this._ensureSession().catch((err) => this.log('Initial session failed: ' + err.message));
 		}
+	}
+
+	// Add or remove the gamerscore capability depending on whether the user
+	// has opted into Xbox Live profile tracking at the app level. Called on
+	// device init and again whenever the app-level toggle flips.
+	async _syncTrackingCapability() {
+		const wantCap = this.homey.app.isTrackingProfile && this.homey.app.isTrackingProfile();
+		const hasCap = this.hasCapability('xbox_gamerscore');
+		if (wantCap && !hasCap) {
+			try {
+				await this.addCapability('xbox_gamerscore');
+				this.log('Added xbox_gamerscore capability (tracking enabled)');
+			} catch (err) {
+				this.log('addCapability(xbox_gamerscore) failed: ' + err.message);
+			}
+		} else if (!wantCap && hasCap) {
+			try {
+				await this.removeCapability('xbox_gamerscore');
+				this.log('Removed xbox_gamerscore capability (tracking disabled)');
+			} catch (err) {
+				this.log('removeCapability(xbox_gamerscore) failed: ' + err.message);
+			}
+		}
+	}
+
+	// Called by the app when the user flips the track_xbl_profile setting.
+	async onTrackingChanged(/* enabled */) {
+		await this._syncTrackingCapability();
+	}
+
+	// Called by the driver when the poller emits a gamerscore reading.
+	// We mirror it onto every device's tile because the gamerscore is the
+	// signed-in account's, not a per-console value.
+	updateGamerscoreFromPoller(score) {
+		if (!this.hasCapability('xbox_gamerscore')) return;
+		this.setCapabilityValue('xbox_gamerscore', score).catch((err) => {
+			this.log('setCapabilityValue(xbox_gamerscore) failed: ' + err.message);
+		});
 	}
 
 	_shouldTrackActiveApp() {
@@ -639,20 +678,42 @@ class XBoxDevice extends Homey.Device {
 				return;
 			}
 			this.log('Powering on: ' + this.device.liveId + '@' + this.device.address);
-			// Fresh client for power-on; this sends UDP magic packets and
-			// then runs a discovery to verify. Doesn't open a session.
+			// Try local UDP magic packet first — fastest, no auth needed,
+			// works on a flat LAN. If the console doesn't respond (different
+			// VLAN / changed IP / multicast blocked) and the user is signed
+			// in, fall back to cloud WakeUp which uses console_id instead
+			// of network reachability.
 			const booter = this._guardedSmartglass();
+			let booted = false;
 			try {
 				await booter.powerOn({ live_id: this.device.liveId, tries: 5, ip: this.device.address });
-				this.log('Console booted');
-				this._driver.triggerConsoleOn(this);
-				this.device.powered = true;
-				if (this._shouldTrackActiveApp()) {
-					this._ensureSession().catch((err) => this.log('Post-boot session failed: ' + err.message));
-				}
+				this.log('Console booted via local UDP');
+				booted = true;
 			} catch (err) {
 				const msg = err && (err.error || err.message) ? (err.error || err.message) : JSON.stringify(err);
-				throw new Error('Boot failed: ' + msg);
+				this.log('Local UDP power-on failed: ' + msg + ' — will try cloud WakeUp');
+			}
+			if (!booted) {
+				const auth = this.homey.app.getAuth && this.homey.app.getAuth();
+				if (auth && auth.hasRefreshToken()) {
+					try {
+						const authHeader = await auth.getAuthHeader();
+						const consoleId = await this._getCloudConsoleId();
+						await xboxapi.powerOnCloud(authHeader, consoleId);
+						this.log('Cloud WakeUp sent to ' + this.device.name);
+						booted = true;
+					} catch (err) {
+						this.log('Cloud WakeUp failed: ' + (err && err.message ? err.message : err));
+					}
+				}
+			}
+			if (!booted) {
+				throw new Error('Boot failed: console did not respond locally and cloud WakeUp was unavailable');
+			}
+			this._driver.triggerConsoleOn(this);
+			this.device.powered = true;
+			if (this._shouldTrackActiveApp()) {
+				this._ensureSession().catch((err) => this.log('Post-boot session failed: ' + err.message));
 			}
 		} else {
 			let dispatched = false;
