@@ -1,0 +1,22 @@
+{
+  "title": {
+    "en": "A specific friend is online",
+    "nl": "Een specifieke vriend is online"
+  },
+  "titleFormatted": {
+    "en": "Friend [[friend]] !{{is|is not}} online",
+    "nl": "Vriend [[friend]] !{{is|is niet}} online"
+  },
+  "hint": {
+    "en": "Checks whether a specific Xbox Live friend is currently online. Based on the cached presence updated by the background poller (refreshes about every minute). Requires 'Track Xbox Live profile' to be enabled in the app settings.",
+    "nl": "Controleert of een specifieke Xbox Live vriend op dit moment online is. Gebaseerd op de gecachte presence die de poller op de achtergrond bijwerkt (ongeveer elke minuut). Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen."
+  },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "friend",
+      "title": { "en": "Friend", "nl": "Vriend" },
+      "placeholder": { "en": "Search by gamertag…", "nl": "Zoek op gamertag…" }
+    }
+  ]
+}

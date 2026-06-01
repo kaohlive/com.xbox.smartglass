@@ -8,6 +8,9 @@ const xboxapi = require('./lib/xboxapi');
 
 const TRACK_PROFILE_SETTING = 'track_xbl_profile';
 const FALLBACK_ART_PATH = '/assets/images/App.png';
+// Same key the poller writes — friend-presence cache shape:
+// { [xuid]: { present: boolean, title: string } }.
+const FRIENDS_CACHE_KEY = 'xbl_last_friends_online';
 
 class XBoxSmartglass extends Homey.App {
 
@@ -38,6 +41,35 @@ class XBoxSmartglass extends Homey.App {
 		});
 		this._flowTriggerSpecificFriendOnline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
 		this._flowTriggerSpecificFriendOffline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+
+		// Condition cards — all three read the poller's cached presence
+		// map, so they evaluate instantly without an extra API call. Up to
+		// ~60s stale (poller cadence), which is acceptable for flow
+		// decisions and matches the trigger event timing anyway.
+		const condFriendOnline = this.homey.flow.getConditionCard('specific-friend-is-online');
+		condFriendOnline.registerRunListener(async (args) => {
+			const cache = this._loadFriendsCache();
+			const entry = args && args.friend ? cache[args.friend.id] : null;
+			return !!(entry && entry.present);
+		});
+		condFriendOnline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+
+		const condFriendPlaying = this.homey.flow.getConditionCard('specific-friend-is-playing-game');
+		condFriendPlaying.registerRunListener(async (args) => {
+			const cache = this._loadFriendsCache();
+			const entry = args && args.friend ? cache[args.friend.id] : null;
+			if (!entry || !entry.present || !entry.title) return false;
+			const needle = (args.game_name || '').toString().trim().toLowerCase();
+			if (!needle) return false;
+			return entry.title.toLowerCase().includes(needle);
+		});
+		condFriendPlaying.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+
+		const condAnyFriendOnline = this.homey.flow.getConditionCard('any-friend-online');
+		condAnyFriendOnline.registerRunListener(async () => {
+			const cache = this._loadFriendsCache();
+			return Object.values(cache).some((e) => e && e.present === true);
+		});
 
 		this.poller.on('achievement', async (data) => {
 			try {
@@ -130,6 +162,11 @@ class XBoxSmartglass extends Homey.App {
 
 	getPoller() {
 		return this.poller;
+	}
+
+	_loadFriendsCache() {
+		const v = this.homey.settings.get(FRIENDS_CACHE_KEY);
+		return v && typeof v === 'object' ? v : {};
 	}
 
 	// Friend autocomplete for the specific-friend triggers. Pulls the

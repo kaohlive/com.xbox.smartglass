@@ -1,0 +1,28 @@
+{
+  "title": {
+    "en": "A specific friend is playing a game",
+    "nl": "Een specifieke vriend speelt een game"
+  },
+  "titleFormatted": {
+    "en": "Friend [[friend]] !{{is|is not}} playing [[game_name]]",
+    "nl": "Vriend [[friend]] !{{speelt|speelt niet}} [[game_name]]"
+  },
+  "hint": {
+    "en": "Checks whether a specific Xbox Live friend is currently playing a game whose title matches the text you provide (case-insensitive substring match, so 'Halo' matches 'Halo Infinite'). Requires 'Track Xbox Live profile' to be enabled.",
+    "nl": "Controleert of een specifieke Xbox Live vriend op dit moment een game speelt waarvan de titel overeenkomt met de opgegeven tekst (hoofdletter-ongevoelige substring, dus 'Halo' matcht 'Halo Infinite'). Vereist dat 'Volg Xbox Live profiel' aanstaat."
+  },
+  "args": [
+    {
+      "type": "autocomplete",
+      "name": "friend",
+      "title": { "en": "Friend", "nl": "Vriend" },
+      "placeholder": { "en": "Search by gamertag…", "nl": "Zoek op gamertag…" }
+    },
+    {
+      "type": "text",
+      "name": "game_name",
+      "title": { "en": "Game name", "nl": "Game naam" },
+      "placeholder": { "en": "e.g. Halo Infinite", "nl": "bijv. Halo Infinite" }
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "title": {
+    "en": "Any Xbox Live friend is online",
+    "nl": "Een Xbox Live vriend is online"
+  },
+  "titleFormatted": {
+    "en": "Any Xbox Live friend !{{is|is not}} online",
+    "nl": "Een Xbox Live vriend !{{is|is niet}} online"
+  },
+  "hint": {
+    "en": "True when at least one of your Xbox Live friends is currently online. Based on the cached presence updated by the background poller (refreshes about every minute). Requires 'Track Xbox Live profile' to be enabled.",
+    "nl": "Waar wanneer ten minste één van je Xbox Live vrienden op dit moment online is. Gebaseerd op de gecachte presence die de poller op de achtergrond bijwerkt (ongeveer elke minuut). Vereist dat 'Volg Xbox Live profiel' aanstaat."
+  }
+}
