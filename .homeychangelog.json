@@ -49,5 +49,8 @@
   },
   "0.7.7": {
     "en": "Fix: Microsoft sign-in now persists across app restarts. The previous OAuth scope used 'XboxLive.offline_access' which Microsoft did not honor, so MS returned an access token but no refresh token — the sign-in appeared successful but album art and power-off stopped working as soon as the access token expired. Now uses the standard 'offline_access' scope, which returns a proper refresh token. After updating: open the app settings and click 'Sign in with Microsoft' once more. Also cleans up some stray 'undefined' log lines from flow-trigger handlers."
+  },
+  "0.7.8": {
+    "en": "Several reliability fixes for setups with multiple consoles. Refresh-token rotation is now serialized so multiple devices starting up in parallel no longer hit the Microsoft token endpoint N times in a row. Session opening is also serialized so concurrent _ensureSession calls share one connect attempt — duplicate session-established lines are gone. Malformed-packet warnings from the underlying library (seen on Series X firmware) are throttled to one warning per minute with a count of suppressed duplicates, so the Homey app log stays readable."
   }
 }

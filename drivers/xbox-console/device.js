@@ -58,6 +58,10 @@ class XBoxDevice extends Homey.Device {
 	// emitted by newer Xbox firmware and the resulting throw originates
 	// inside a dgram 'message' callback — without this guard it becomes
 	// an uncaughtException that crashes the whole Homey app process.
+	//
+	// On Series X firmware the same malformed packet arrives every ~500ms,
+	// so we throttle the warning to once per 60s with a tail count, to
+	// keep the Homey app log usable while still flagging the situation.
 	_guardedSmartglass() {
 		const client = Smartglass();
 		const events = client && client._events;
@@ -65,12 +69,25 @@ class XBoxDevice extends Homey.Device {
 			const existing = events.listeners('receive');
 			events.removeAllListeners('receive');
 			const log = this.log.bind(this);
+			let lastWarnAt = 0;
+			let suppressedSinceWarn = 0;
 			events.on('receive', function (message, xbox, remote, smartglass) {
 				for (const listener of existing) {
 					try {
 						listener.call(this, message, xbox, remote, smartglass);
 					} catch (err) {
-						log('Dropped malformed Xbox packet: ' + (err && err.message ? err.message : err));
+						const now = Date.now();
+						if (now - lastWarnAt > 60_000) {
+							const detail = err && err.message ? err.message : String(err);
+							const suffix = suppressedSinceWarn > 0
+								? ' (' + suppressedSinceWarn + ' similar suppressed since last warning)'
+								: '';
+							log('Dropped malformed Xbox packet: ' + detail + suffix);
+							lastWarnAt = now;
+							suppressedSinceWarn = 0;
+						} else {
+							suppressedSinceWarn++;
+						}
 					}
 				}
 			});
@@ -202,11 +219,19 @@ class XBoxDevice extends Homey.Device {
 	// actions like power off; anonymous sessions are silently ignored for
 	// shutdown but work fine for buttons and media. Falls back to anonymous
 	// if credentials are unavailable.
-	async _ensureSession() {
-		if (this.client && this.client._connection_status) return;
+	_ensureSession() {
+		if (this.client && this.client._connection_status) return Promise.resolve();
 		if (this._sessionConnecting) return this._sessionConnecting;
-		if (!this.device.address) throw new Error('No console address configured');
+		if (!this.device.address) return Promise.reject(new Error('No console address configured'));
 
+		// Assign synchronously before any await, so concurrent callers
+		// see the in-flight promise and don't kick off a duplicate connect.
+		this._sessionConnecting = this._doConnect()
+			.finally(() => { this._sessionConnecting = null; });
+		return this._sessionConnecting;
+	}
+
+	async _doConnect() {
 		// If a prior client was torn down we need a fresh one (the lib closes
 		// its socket on disconnect/timeout).
 		if (!this.client || this.client._socket === false) {
@@ -221,32 +246,26 @@ class XBoxDevice extends Homey.Device {
 			this.log('Could not fetch Xbox Live credentials, will connect anonymously: ' + err.message);
 		}
 
-		const connectPromise = creds
-			? this.client.connect(this.device.address, creds.uhs, creds.jwt)
-			: this.client.connect(this.device.address);
+		try {
+			await (creds
+				? this.client.connect(this.device.address, creds.uhs, creds.jwt)
+				: this.client.connect(this.device.address));
+		} catch (err) {
+			const msg = (err && (err.message || err.error)) ? (err.message || err.error) : JSON.stringify(err);
+			this.log('Connect failed: ' + msg);
+			throw err;
+		}
 
-		this._sessionConnecting = connectPromise
-			.then(() => {
-				const mode = creds ? 'authenticated' : 'anonymous';
-				this.log('SmartGlass session established with ' + this.device.address + ' (' + mode + ')');
-				if (this.client._console && typeof this.client._console.getLiveid === 'function') {
-					const liveid = this.client._console.getLiveid();
-					this.device.liveId = liveid;
-					this.setSettings({ liveid }).catch(() => {});
-				}
-				this.client.addManager('system_media', SystemMediaChannel());
-				this._applyPowerState(true);
-				this._armIdleDisconnect();
-			})
-			.catch((err) => {
-				const msg = (err && (err.message || err.error)) ? (err.message || err.error) : JSON.stringify(err);
-				this.log('Connect failed: ' + msg);
-				throw err;
-			})
-			.finally(() => {
-				this._sessionConnecting = null;
-			});
-		return this._sessionConnecting;
+		const mode = creds ? 'authenticated' : 'anonymous';
+		this.log('SmartGlass session established with ' + this.device.address + ' (' + mode + ')');
+		if (this.client._console && typeof this.client._console.getLiveid === 'function') {
+			const liveid = this.client._console.getLiveid();
+			this.device.liveId = liveid;
+			this.setSettings({ liveid }).catch(() => {});
+		}
+		this.client.addManager('system_media', SystemMediaChannel());
+		this._applyPowerState(true);
+		this._armIdleDisconnect();
 	}
 
 	// Open the SystemInputChannel and await its ready state. The library's
