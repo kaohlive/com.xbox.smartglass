@@ -413,17 +413,18 @@ class XBoxDevice extends Homey.Device {
 		if (!newAppId) return;
 		if (this.device.currentApp.appStoreId === newAppId) return;
 
-		const appInfo = await require('../../lib/titlehub.js').GetappTitleBatch(newAppId.split('!')[0], this.homey);
-		let appName = newAppId.split('!')[0];
+		this.log('Active app changed: ' + newAppId);
+		const pfn = newAppId.split('!')[0];
+		const appInfo = await require('../../lib/titlehub.js').GetappTitleBatch(pfn, this.homey);
+		this.log('titlehub for ' + pfn + ' → ' + (appInfo && appInfo.result ? 'name="' + appInfo.name + '" image=' + appInfo.displayImage : 'no result' + (appInfo && appInfo.name ? ' (' + appInfo.name + ')' : '')));
+
+		let appName = pfn;
 		let appImageUrl = defaultAlbumArtImage.replace('{0}', 'App');
-		if (appInfo && appInfo.result) {
+
+		if (appInfo && appInfo.result && appInfo.displayImage) {
 			appImageUrl = appInfo.displayImage;
-			this.device.appImage.setStream(async (stream) => {
-				const res = await fetch(appInfo.displayImage);
-				if (!res.ok) throw new Error('Invalid Response');
-				return res.body.pipe(stream);
-			});
 			appName = appInfo.name;
+			this._setAppImageFromUrl(appInfo.displayImage);
 		} else {
 			if (appName.indexOf('_8wekyb3d8bbwe') > 0) {
 				appName = appName.substring(0, appName.indexOf('_8wekyb3d8bbwe'));
@@ -438,8 +439,13 @@ class XBoxDevice extends Homey.Device {
 				this.device.appImage.setPath(defaultAlbumArtImage.replace('{0}', 'Game'));
 				this._driver.triggerGameStarted(this);
 			}
+			try {
+				await this.device.appImage.update();
+			} catch (err) {
+				this.log('appImage.update() (path) failed: ' + (err && err.message ? err.message : err));
+			}
 		}
-		this.device.appImage.update().catch(() => {});
+
 		this.setIfHasCapability('speaker_artist', appName);
 		this._driver.triggerAppChange(this, {
 			new_app_name: appName,
@@ -448,6 +454,30 @@ class XBoxDevice extends Homey.Device {
 			new_app_art_image: this.device.appImage,
 		});
 		this.device.currentApp.appStoreId = newAppId;
+	}
+
+	// Wire up a streaming source for the album art image and force Homey to
+	// re-pull it. Surfaces fetch/pipe errors in the log instead of silently
+	// swallowing them, so titlehub or CDN failures are diagnosable.
+	_setAppImageFromUrl(url) {
+		this.device.appImage.setStream(async (stream) => {
+			this.log('appImage stream: fetching ' + url);
+			let res;
+			try {
+				res = await fetch(url);
+			} catch (err) {
+				this.log('appImage stream: fetch threw: ' + (err && err.message ? err.message : err));
+				throw err;
+			}
+			if (!res.ok) {
+				this.log('appImage stream: fetch returned status ' + res.status);
+				throw new Error('Image fetch returned status ' + res.status);
+			}
+			return res.body.pipe(stream);
+		});
+		this.device.appImage.update()
+			.then(() => this.log('appImage.update() OK'))
+			.catch((err) => this.log('appImage.update() (stream) failed: ' + (err && err.message ? err.message : err)));
 	}
 
 	sendLaunchAppMessage(/* appname */) {

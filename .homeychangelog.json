@@ -43,5 +43,8 @@
   },
   "0.7.5": {
     "en": "Fix: power off now actually works. The SmartGlass session is upgraded from anonymous to authenticated when you are signed in via 'Sign in with Microsoft' in the app settings — passing the Xbox Live user hash and XSTS token to the connect. The console silently ignores power_off from anonymous sessions, which is why earlier attempts went nowhere. If you are not signed in the session stays anonymous and buttons / media still work, but power off won't."
+  },
+  "0.7.6": {
+    "en": "Surface album art / game art failures in the app log. Two silent .catch(()=>{}) blocks were hiding titlehub auth issues, CDN failures and image-update errors, making missing artwork undiagnosable. Every step of the active-app detection pipeline now logs the AUM ID, titlehub response, image URL and fetch result so the cause of a blank cover shows up directly in the Homey app log."
   }
 }
