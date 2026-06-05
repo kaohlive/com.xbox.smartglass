@@ -76,5 +76,8 @@
   },
   "1.2.5": {
     "en": "Three new flow condition cards for use in the 'And' column. 'A specific friend is online' checks a single friend (with the same searchable dropdown as the triggers). 'A specific friend is playing a game' matches when the cached game title contains the text you provide (case-insensitive, so 'Halo' matches 'Halo Infinite'). 'Any Xbox Live friend is online' is true when at least one friend is online. All three are evaluated against the presence cache the background poller refreshes about once a minute, so no extra API calls are made when a flow runs."
+  },
+  "1.2.6": {
+    "en": "New 'Event log' panel in the app settings, visible when signed in. Shows the last 200 interesting Xbox Live events the background poller has captured: achievements unlocked, friends coming online or going offline (including which game they were playing), and any fetch failures. Persists across restarts so you can check hours later. Also broadens how the friend's current game is detected — peoplehub uses different field names per title, so the previous extractor sometimes returned an empty game. It now tries TitleName, RichPresence and PresenceText, with a top-level fallback for cases where the title only lives there."
   }
 }

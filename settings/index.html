@@ -16,6 +16,16 @@
         .advanced-body button { margin-top: 8px; }
         .step-list { padding-left: 20px; }
         .step-list li { margin: 4px 0; }
+        .event-log-wrap { margin-top: 28px; }
+        .event-log-actions { display: flex; gap: 8px; margin: 8px 0; }
+        .event-log-actions button { flex: 0 0 auto; }
+        .event-log-table { width: 100%; border-collapse: collapse; font-size: 12px; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+        .event-log-table th, .event-log-table td { text-align: left; padding: 4px 6px; border-bottom: 1px solid #eee; vertical-align: top; }
+        .event-log-table th { background: #f7f7f7; font-weight: 600; }
+        .event-log-table td.ts { white-space: nowrap; color: #5f6368; width: 1%; }
+        .event-log-table td.msg { word-break: break-word; }
+        .event-log-empty { padding: 16px; text-align: center; color: #5f6368; font-size: 13px; background: #f7f7f7; border-radius: 6px; }
+        .event-log-scroll { max-height: 320px; overflow-y: auto; border: 1px solid #eee; border-radius: 6px; }
     </style>
 </head>
 <body>
@@ -41,6 +51,19 @@
             <input id="trackProfile" type="checkbox" />
             <span>Track Xbox Live profile (background polling)</span>
         </label>
+    </fieldset>
+
+    <fieldset id="eventLogSection" class="event-log-wrap" style="border: none; padding: 0; display: none;">
+        <legend style="padding: 0; margin-bottom: 8px; font-weight: 600;">Event log</legend>
+        <p style="margin: 0 0 8px 0; font-size: 13px; color: #5f6368;">
+            Recent interesting Xbox Live events captured by the background poller — achievements unlocked,
+            friends coming online or going offline, and diagnostics when something looks off. Holds the last 200 entries.
+        </p>
+        <div class="event-log-actions">
+            <button id="eventLogRefresh" class="homey-button-secondary">Refresh</button>
+            <button id="eventLogClear" class="homey-button-secondary">Clear</button>
+        </div>
+        <div id="eventLogContainer" class="event-log-scroll"></div>
     </fieldset>
 
     <details id="advanced">
@@ -78,6 +101,59 @@
 
             const trackProfileSection = document.getElementById('trackProfileSection');
             const trackProfileCheckbox = document.getElementById('trackProfile');
+            const eventLogSection = document.getElementById('eventLogSection');
+            const eventLogContainer = document.getElementById('eventLogContainer');
+            const eventLogRefreshBtn = document.getElementById('eventLogRefresh');
+            const eventLogClearBtn = document.getElementById('eventLogClear');
+
+            function formatTs(iso) {
+                if (!iso) return '';
+                const d = new Date(iso);
+                if (Number.isNaN(d.getTime())) return iso;
+                const pad = (n) => String(n).padStart(2, '0');
+                return pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' '
+                    + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
+            }
+
+            function escapeHtml(s) {
+                return String(s).replace(/[&<>"']/g, (c) => ({
+                    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+                })[c]);
+            }
+
+            function renderEventLog(events) {
+                if (!events || !events.length) {
+                    eventLogContainer.innerHTML = '<div class="event-log-empty">No events yet. The background poller adds entries here when achievements, friend transitions, or fetch errors happen.</div>';
+                    return;
+                }
+                const rows = events.map((e) =>
+                    '<tr><td class="ts">' + escapeHtml(formatTs(e.ts)) + '</td>'
+                    + '<td class="msg">' + escapeHtml(e.message || '') + '</td></tr>'
+                ).join('');
+                eventLogContainer.innerHTML =
+                    '<table class="event-log-table">'
+                    + '<thead><tr><th>Time</th><th>Event</th></tr></thead>'
+                    + '<tbody>' + rows + '</tbody>'
+                    + '</table>';
+            }
+
+            function refreshEventLog() {
+                Homey.api('GET', '/diagnostics/events', null, (err, result) => {
+                    if (err) {
+                        eventLogContainer.innerHTML = '<div class="event-log-empty">Could not load events: ' + escapeHtml(err.message || err) + '</div>';
+                        return;
+                    }
+                    renderEventLog(result && result.events);
+                });
+            }
+
+            eventLogRefreshBtn.addEventListener('click', refreshEventLog);
+            eventLogClearBtn.addEventListener('click', () => {
+                Homey.confirm('Clear the event log?', 'warning', (err, ok) => {
+                    if (err || !ok) return;
+                    Homey.api('POST', '/diagnostics/clear', null, () => refreshEventLog());
+                });
+            });
 
             function refreshStatus() {
                 Homey.api('GET', '/auth/status', null, (err, result) => {
@@ -86,6 +162,7 @@
                         authorizeBtn.style.display = '';
                         signoutBtn.style.display = 'none';
                         trackProfileSection.style.display = 'none';
+                        eventLogSection.style.display = 'none';
                         return;
                     }
                     if (result && result.authenticated) {
@@ -94,12 +171,15 @@
                         authorizeBtn.style.display = 'none';
                         signoutBtn.style.display = '';
                         trackProfileSection.style.display = '';
+                        eventLogSection.style.display = '';
+                        refreshEventLog();
                     } else {
                         const detail = result && result.error ? ' (' + result.error + ')' : '';
                         setStatus('disconnected', 'Not signed in.' + detail);
                         authorizeBtn.style.display = '';
                         signoutBtn.style.display = 'none';
                         trackProfileSection.style.display = 'none';
+                        eventLogSection.style.display = 'none';
                     }
                 });
             }

@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "1.2.5",
+  "version": "1.2.6",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -52,6 +52,16 @@
     "signOut": {
       "method": "POST",
       "path": "/auth/signout",
+      "public": false
+    },
+    "getDiagnosticsEvents": {
+      "method": "GET",
+      "path": "/diagnostics/events",
+      "public": false
+    },
+    "clearDiagnosticsEvents": {
+      "method": "POST",
+      "path": "/diagnostics/clear",
       "public": false
     }
   },

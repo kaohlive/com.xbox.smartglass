@@ -4,6 +4,7 @@ const Homey = require('homey');
 const fetch = require('node-fetch');
 const XboxAuth = require('./lib/xboxauth');
 const XblPoller = require('./lib/xblpoller');
+const XblEventLog = require('./lib/xbleventlog');
 const xboxapi = require('./lib/xboxapi');
 
 const TRACK_PROFILE_SETTING = 'track_xbl_profile';
@@ -17,7 +18,8 @@ class XBoxSmartglass extends Homey.App {
 	async onInit() {
 		this.log('XBox Smartglass app is running...');
 		this.auth = new XboxAuth(this.homey, this.log.bind(this));
-		this.poller = new XblPoller(this.homey, this.auth, this.log.bind(this));
+		this.eventLog = new XblEventLog(this.homey);
+		this.poller = new XblPoller(this.homey, this.auth, this.log.bind(this), this.eventLog);
 
 		// Achievement and friend-online are app-level (account-scoped)
 		// triggers, not per-device. With multiple Xboxes you don't want
@@ -162,6 +164,10 @@ class XBoxSmartglass extends Homey.App {
 
 	getPoller() {
 		return this.poller;
+	}
+
+	getEventLog() {
+		return this.eventLog;
 	}
 
 	_loadFriendsCache() {

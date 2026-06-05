@@ -29,4 +29,13 @@ module.exports = {
 		homey.app.getAuth().signOut();
 		return { ok: true };
 	},
+
+	async getDiagnosticsEvents({ homey }) {
+		return { events: homey.app.getEventLog().list() };
+	},
+
+	async clearDiagnosticsEvents({ homey }) {
+		homey.app.getEventLog().clear();
+		return { ok: true };
+	},
 };
