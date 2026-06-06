@@ -35,14 +35,17 @@ class XBoxSmartglass extends Homey.App {
 		// drops the specific one unless the picked friend matches.
 		this._flowTriggerSpecificFriendOnline = this.homey.flow.getTriggerCard('specific-friend-online');
 		this._flowTriggerSpecificFriendOffline = this.homey.flow.getTriggerCard('specific-friend-offline');
-		this._flowTriggerSpecificFriendOnline.registerRunListener(async (args, state) => {
+		this._flowTriggerFriendSwitchedGame = this.homey.flow.getTriggerCard('friend-switched-game');
+		this._flowTriggerSpecificFriendSwitchedGame = this.homey.flow.getTriggerCard('specific-friend-switched-game');
+		const friendXuidRunListener = async (args, state) => {
 			return !!(args && args.friend && state && args.friend.id === state.xuid);
-		});
-		this._flowTriggerSpecificFriendOffline.registerRunListener(async (args, state) => {
-			return !!(args && args.friend && state && args.friend.id === state.xuid);
-		});
+		};
+		this._flowTriggerSpecificFriendOnline.registerRunListener(friendXuidRunListener);
+		this._flowTriggerSpecificFriendOffline.registerRunListener(friendXuidRunListener);
+		this._flowTriggerSpecificFriendSwitchedGame.registerRunListener(friendXuidRunListener);
 		this._flowTriggerSpecificFriendOnline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
 		this._flowTriggerSpecificFriendOffline.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
+		this._flowTriggerSpecificFriendSwitchedGame.registerArgumentAutocompleteListener('friend', (query) => this._friendAutocomplete(query));
 
 		// Condition cards — all three read the poller's cached presence
 		// map, so they evaluate instantly without an extra API call. Up to
@@ -104,6 +107,25 @@ class XBoxSmartglass extends Homey.App {
 				]);
 			} catch (err) {
 				this.log('friend-online trigger fire failed: ' + err.message);
+			}
+		});
+		this.poller.on('friend-switched-game', async (data) => {
+			try {
+				const image = await this._makeRemoteImage(data.friend_gamerpic_url);
+				const tokens = {
+					friend_gamertag: data.friend_gamertag || '',
+					friend_display_name: data.friend_display_name || '',
+					friend_previous_title_name: data.friend_previous_title_name || '',
+					friend_title_name: data.friend_title_name || '',
+					friend_gamerpic_url: data.friend_gamerpic_url || '',
+					friend_gamerpic_image: image,
+				};
+				await Promise.all([
+					this._flowTriggerFriendSwitchedGame.trigger(tokens),
+					this._flowTriggerSpecificFriendSwitchedGame.trigger(tokens, { xuid: data.friend_xuid }),
+				]);
+			} catch (err) {
+				this.log('friend-switched-game trigger fire failed: ' + err.message);
 			}
 		});
 		this.poller.on('friend-offline', async (data) => {

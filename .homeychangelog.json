@@ -79,5 +79,8 @@
   },
   "1.2.6": {
     "en": "New 'Event log' panel in the app settings, visible when signed in. Shows the last 200 interesting Xbox Live events the background poller has captured: achievements unlocked, friends coming online or going offline (including which game they were playing), and any fetch failures. Persists across restarts so you can check hours later. Also broadens how the friend's current game is detected — peoplehub uses different field names per title, so the previous extractor sometimes returned an empty game. It now tries TitleName, RichPresence and PresenceText, with a top-level fallback for cases where the title only lives there."
+  },
+  "1.2.7": {
+    "en": "Two new flow triggers for the case where a friend who is already online switches from one game to another (a thing the event log surfaced but flows couldn't react to). 'Friend switched game' fires for any friend; 'A specific friend switched game' filters on the friend you pick from the dropdown. Tokens include both the previous and the new game name, plus the usual gamertag, display name and gamerpic (URL + binary). Only fires when both titles are real games — going from no-game to a game (or back) is already covered by the came-online trigger."
   }
 }

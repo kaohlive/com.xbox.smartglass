@@ -1,7 +1,7 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.xbox.smartglass",
-  "version": "1.2.6",
+  "version": "1.2.7",
   "compatibility": ">=12.0.0",
   "brandColor": "#107c10",
   "sdk": 3,
@@ -248,6 +248,71 @@
       },
       {
         "title": {
+          "en": "Friend switched game",
+          "nl": "Vriend wisselde van game"
+        },
+        "titleFormatted": {
+          "en": "Friend switched game",
+          "nl": "Vriend wisselde van game"
+        },
+        "hint": {
+          "en": "Fires when an Xbox Live friend who is already online switches from one game to another. Only fires when both the previous and the new title are real games — going from no game to a game (or back) doesn't count, the came-online trigger already covers that. Requires 'Track Xbox Live profile' to be enabled in the app settings. The event is per account, not per console.",
+          "nl": "Wordt geactiveerd wanneer een Xbox Live vriend die al online is overschakelt van de ene game naar de andere. Vuurt alleen als beide titels een echte game zijn — wisselen tussen geen-game en een game telt niet, dat valt al onder 'kwam online'. Vereist dat 'Volg Xbox Live profiel' aanstaat in de app-instellingen. Het is een account-event, niet per console."
+        },
+        "tokens": [
+          {
+            "type": "string",
+            "name": "friend_gamertag",
+            "title": {
+              "en": "Friend gamertag",
+              "nl": "Vriend gamertag"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_display_name",
+            "title": {
+              "en": "Friend display name",
+              "nl": "Vriend weergavenaam"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_previous_title_name",
+            "title": {
+              "en": "Previous game",
+              "nl": "Vorige game"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_title_name",
+            "title": {
+              "en": "New game",
+              "nl": "Nieuwe game"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_gamerpic_url",
+            "title": {
+              "en": "Friend gamerpic URL",
+              "nl": "Vriend gamerpic URL"
+            }
+          },
+          {
+            "type": "image",
+            "name": "friend_gamerpic_image",
+            "title": {
+              "en": "Friend gamerpic",
+              "nl": "Vriend gamerpic"
+            }
+          }
+        ],
+        "id": "friend-switched-game"
+      },
+      {
+        "title": {
           "en": "A specific friend went offline",
           "nl": "Een specifieke vriend ging offline"
         },
@@ -395,6 +460,85 @@
           }
         ],
         "id": "specific-friend-online"
+      },
+      {
+        "title": {
+          "en": "A specific friend switched game",
+          "nl": "Een specifieke vriend wisselde van game"
+        },
+        "titleFormatted": {
+          "en": "Friend [[friend]] switched game",
+          "nl": "Vriend [[friend]] wisselde van game"
+        },
+        "hint": {
+          "en": "Fires when a specific Xbox Live friend who is already online switches from one game to another. Pick the friend in the dropdown. Only fires when both the previous and the new title are real games. Requires 'Track Xbox Live profile' to be enabled.",
+          "nl": "Wordt geactiveerd wanneer een specifieke Xbox Live vriend die al online is overschakelt van de ene game naar de andere. Kies de vriend in het dropdown. Vuurt alleen als beide titels een echte game zijn. Vereist dat 'Volg Xbox Live profiel' aanstaat."
+        },
+        "args": [
+          {
+            "type": "autocomplete",
+            "name": "friend",
+            "title": {
+              "en": "Friend",
+              "nl": "Vriend"
+            },
+            "placeholder": {
+              "en": "Search by gamertag…",
+              "nl": "Zoek op gamertag…"
+            }
+          }
+        ],
+        "tokens": [
+          {
+            "type": "string",
+            "name": "friend_gamertag",
+            "title": {
+              "en": "Friend gamertag",
+              "nl": "Vriend gamertag"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_display_name",
+            "title": {
+              "en": "Friend display name",
+              "nl": "Vriend weergavenaam"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_previous_title_name",
+            "title": {
+              "en": "Previous game",
+              "nl": "Vorige game"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_title_name",
+            "title": {
+              "en": "New game",
+              "nl": "Nieuwe game"
+            }
+          },
+          {
+            "type": "string",
+            "name": "friend_gamerpic_url",
+            "title": {
+              "en": "Friend gamerpic URL",
+              "nl": "Vriend gamerpic URL"
+            }
+          },
+          {
+            "type": "image",
+            "name": "friend_gamerpic_image",
+            "title": {
+              "en": "Friend gamerpic",
+              "nl": "Vriend gamerpic"
+            }
+          }
+        ],
+        "id": "specific-friend-switched-game"
       },
       {
         "id": "started-gaming",
