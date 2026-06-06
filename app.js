@@ -17,8 +17,8 @@ class XBoxSmartglass extends Homey.App {
 
 	async onInit() {
 		this.log('XBox Smartglass app is running...');
-		this.auth = new XboxAuth(this.homey, this.log.bind(this));
 		this.eventLog = new XblEventLog(this.homey);
+		this.auth = new XboxAuth(this.homey, this.log.bind(this), this.eventLog);
 		this.poller = new XblPoller(this.homey, this.auth, this.log.bind(this), this.eventLog);
 
 		// Achievement and friend-online are app-level (account-scoped)

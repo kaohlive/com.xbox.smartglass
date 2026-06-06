@@ -115,6 +115,19 @@
                     + pad(d.getHours()) + ':' + pad(d.getMinutes()) + ':' + pad(d.getSeconds());
             }
 
+            function formatRelative(ts) {
+                if (!ts || typeof ts !== 'number') return '';
+                const diff = Math.max(0, Date.now() - ts);
+                const sec = Math.floor(diff / 1000);
+                const min = Math.floor(sec / 60);
+                const hr = Math.floor(min / 60);
+                const day = Math.floor(hr / 24);
+                if (day >= 1) return day + (day === 1 ? ' day ago' : ' days ago');
+                if (hr >= 1) return hr + (hr === 1 ? ' hour ago' : ' hours ago');
+                if (min >= 1) return min + (min === 1 ? ' minute ago' : ' minutes ago');
+                return 'just now';
+            }
+
             function escapeHtml(s) {
                 return String(s).replace(/[&<>"']/g, (c) => ({
                     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -167,7 +180,11 @@
                     }
                     if (result && result.authenticated) {
                         const tag = result.gamertag ? ' as <span class="gamertag">' + result.gamertag + '</span>' : '';
-                        setStatus('connected', 'Signed in' + tag + '.');
+                        const rotated = formatRelative(result.tokenLastRotated);
+                        const rotatedLine = rotated
+                            ? '<div style="margin-top:4px;font-size:12px;opacity:0.8;">Token last rotated: ' + escapeHtml(rotated) + '</div>'
+                            : '';
+                        setStatus('connected', 'Signed in' + tag + '.' + rotatedLine);
                         authorizeBtn.style.display = 'none';
                         signoutBtn.style.display = '';
                         trackProfileSection.style.display = '';

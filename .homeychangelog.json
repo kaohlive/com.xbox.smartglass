@@ -82,5 +82,8 @@
   },
   "1.2.7": {
     "en": "Two new flow triggers for the case where a friend who is already online switches from one game to another (a thing the event log surfaced but flows couldn't react to). 'Friend switched game' fires for any friend; 'A specific friend switched game' filters on the friend you pick from the dropdown. Tokens include both the previous and the new game name, plus the usual gamertag, display name and gamerpic (URL + binary). Only fires when both titles are real games — going from no-game to a game (or back) is already covered by the came-online trigger."
+  },
+  "1.2.8": {
+    "en": "Sign-in is now much harder to lose. Previous versions wiped the Microsoft refresh token the very first time Microsoft returned 'invalid_grant', which sometimes triggered on transient hiccups at app start. Now the app keeps a backup of the previous refresh token across one rotation and tries that first; only after three consecutive real failures is the token actually wiped. Network errors and 5xx responses never count as failures. Every refresh, rotation, fallback or wipe is also written to the event log so you can see exactly what's happening. The settings page now shows 'Token last rotated: …' under the signed-in status so you can spot when rotations stop happening."
   }
 }
