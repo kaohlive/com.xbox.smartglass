@@ -91,5 +91,8 @@
   },
   "1.3.0": {
     "en": "Microsoft refresh tokens now last weeks instead of about a day. Previous releases used an SPA-style sign-in, which Microsoft caps to a 24-hour refresh-token lifetime as a security measure for single-page apps. The token-exchange path has been switched to the public Mobile/Desktop platform, which gives a 90-day sliding-window refresh token. One-time action required: open the app settings, tap 'Sign out', then tap 'Sign in with Microsoft' again. After that you should not see the periodic 're-authorization required' notification anymore."
+  },
+  "1.3.1": {
+    "en": "Fixes the 'Achievement unlocked' flow trigger silently missing real unlocks. The Microsoft achievement query used a wrong orderBy value and a server-side filter parameter that has had inconsistent names across releases, which let locked achievements slip into the seen-set and made later unlocks look already-seen. The query now uses orderBy=UnlockTime and filters on progressState in code, which is authoritative. The list of recent titles checked grows from 5 to 10, and the seen-set is automatically wiped once on upgrade so the next first tick re-seeds with the corrected data. The seed entry in the event-log now also shows the most-recently-unlocked achievement found (title + name + timestamp), so you can verify the pipeline reaches the right data. Top-level failures of the achievements / friends / gamerscore tick now also write to the event log instead of only the developer console."
   }
 }
