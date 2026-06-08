@@ -100,5 +100,8 @@
   },
   "1.3.3": {
     "en": "Fixes a burst of false 'Achievement unlocked' triggers right after the 1.3.2 re-seed. Microsoft's achievements endpoint is eventually-consistent: between two ticks it can return a slightly different set of unlocks for the same title, which let stale (already-earned) achievements slip past the seen-set check on the tick after seeding. The poller now also stamps a cutoff timestamp at seed time, and only achievements with an unlock-time newer than that cutoff can ever fire. Stale entries are silently ignored regardless of what the seen-set looks like. The seed entry in the event log shows the cutoff timestamp."
+  },
+  "1.3.4": {
+    "en": "Removes the 'Advanced — paste a refresh token manually' fallback from the app settings. It existed as a workaround for environments where the OAuth callback couldn't reach Homey, and used the deprecated LiveSDK consent URL with a hardcoded legacy client id. Since 1.3.0 the standard Sign in with Microsoft flow works reliably on Mobile/Desktop public client, so the fallback is now just clutter — and pasting a LiveSDK-shaped token would not work against the current platform configuration anyway. The HTTP endpoint POST /auth/refresh-token and the corresponding helper are removed too."
   }
 }

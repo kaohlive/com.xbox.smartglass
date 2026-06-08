@@ -14,17 +14,6 @@ module.exports = {
 		}
 	},
 
-	async setRefreshToken({ homey, body }) {
-		if (!body || typeof body.refreshToken !== 'string') {
-			throw new Error('Body must include a refreshToken string');
-		}
-		try {
-			return await homey.app.getAuth().setRefreshTokenManually(body.refreshToken);
-		} catch (err) {
-			throw new Error('Refresh token rejected: ' + err.message);
-		}
-	},
-
 	async signOut({ homey }) {
 		homey.app.getAuth().signOut();
 		return { ok: true };

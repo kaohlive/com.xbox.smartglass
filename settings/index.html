@@ -6,16 +6,6 @@
         .status-disconnected { background: #fce8e6; color: #b3261e; }
         .status-checking { background: #f1f3f4; color: #5f6368; }
         .gamertag { font-weight: 600; }
-        details { margin-top: 24px; padding: 8px 0; border-top: 1px solid #e0e0e0; }
-        details summary { cursor: pointer; font-size: 14px; color: #5f6368; padding: 8px 0; }
-        details[open] summary { margin-bottom: 8px; }
-        .advanced-body { padding: 8px 4px; }
-        .advanced-body p { margin: 0 0 8px 0; font-size: 13px; color: #5f6368; }
-        .advanced-body label { display: block; margin: 12px 0 4px; font-size: 13px; }
-        .advanced-body input { width: 100%; padding: 8px; box-sizing: border-box; }
-        .advanced-body button { margin-top: 8px; }
-        .step-list { padding-left: 20px; }
-        .step-list li { margin: 4px 0; }
         .event-log-wrap { margin-top: 28px; }
         .event-log-actions { display: flex; gap: 8px; margin: 8px 0; }
         .event-log-actions button { flex: 0 0 auto; }
@@ -66,33 +56,11 @@
         <div id="eventLogContainer" class="event-log-scroll"></div>
     </fieldset>
 
-    <details id="advanced">
-        <summary>Advanced — paste a refresh token manually</summary>
-        <div class="advanced-body">
-            <p>Use this only if the normal sign-in flow doesn't work for you (for example, the redirect back to Homey times out). Open the Microsoft consent URL in a private browser window, sign in, and paste the <code>refresh_token</code> value from the redirect URL fragment.</p>
-            <ol class="step-list">
-                <li>Open the <a id="legacyAuthUrl" target="_blank" rel="noopener">Microsoft sign-in URL</a> in a private/incognito window.</li>
-                <li>Sign in. The browser will end on a blank page.</li>
-                <li>Copy the entire URL from the address bar and paste it below — we'll extract the refresh token automatically.</li>
-            </ol>
-            <label for="legacyInput">Redirect URL or refresh token</label>
-            <input id="legacyInput" type="text" placeholder="https://login.live.com/oauth20_desktop.srf#refresh_token=…" />
-            <button id="legacySave" class="homey-button-secondary-full">Save</button>
-        </div>
-    </details>
-
     <script type="text/javascript">
-        const LEGACY_AUTH_URL = 'https://login.live.com/oauth20_authorize.srf?client_id=0000000048093EE3&redirect_uri=https://login.live.com/oauth20_desktop.srf&response_type=token&display=touch&scope=service::user.auth.xboxlive.com::MBI_SSL&locale=en';
-
         function onHomeyReady(Homey) {
             const statusEl = document.getElementById('status');
             const authorizeBtn = document.getElementById('authorize');
             const signoutBtn = document.getElementById('signout');
-            const legacyAuthUrlEl = document.getElementById('legacyAuthUrl');
-            const legacyInput = document.getElementById('legacyInput');
-            const legacySaveBtn = document.getElementById('legacySave');
-
-            legacyAuthUrlEl.href = LEGACY_AUTH_URL;
 
             function setStatus(state, message) {
                 statusEl.className = 'status-card status-' + state;
@@ -241,31 +209,6 @@
                     Homey.api('POST', '/auth/signout', null, () => refreshStatus());
                 });
             });
-
-            legacySaveBtn.addEventListener('click', () => {
-                const raw = (legacyInput.value || '').trim();
-                if (!raw) return Homey.alert('Paste a URL or refresh token first.');
-                const token = extractRefreshToken(raw);
-                if (!token) return Homey.alert('Could not find a refresh_token in that value.');
-                Homey.api('POST', '/auth/refresh-token', { refreshToken: token }, (err, result) => {
-                    if (err) {
-                        Homey.alert('Token rejected: ' + (err.message || err));
-                        return;
-                    }
-                    legacyInput.value = '';
-                    Homey.alert('Token accepted.', 'info');
-                    refreshStatus();
-                });
-            });
-
-            function extractRefreshToken(value) {
-                // Accept either a raw token, a query string, or the full redirect URL.
-                if (value.indexOf('refresh_token=') === -1) {
-                    return value; // assume the user already pasted just the token
-                }
-                const after = value.split('refresh_token=')[1];
-                return decodeURIComponent(after.split('&')[0].split('#')[0]);
-            }
 
             Homey.ready();
             refreshStatus();
