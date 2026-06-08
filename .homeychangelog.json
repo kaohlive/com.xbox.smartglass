@@ -97,5 +97,8 @@
   },
   "1.3.2": {
     "en": "Follow-up to the 1.3.1 achievement fix: the previous endpoint we used to find recently-played games (achievements.xboxlive.com /history/titles) turned out not to sort by recency at all, so freshly-played games could fall out of the window while old ones from years ago stayed in. Switched to titlehub /titleHistory, which is sorted by last-played descending and is the same data the official Xbox app uses. The seen-set is automatically wiped again on upgrade so the next first tick re-seeds against the right games — you should see a much more recent 'most recent' entry in the event log."
+  },
+  "1.3.3": {
+    "en": "Fixes a burst of false 'Achievement unlocked' triggers right after the 1.3.2 re-seed. Microsoft's achievements endpoint is eventually-consistent: between two ticks it can return a slightly different set of unlocks for the same title, which let stale (already-earned) achievements slip past the seen-set check on the tick after seeding. The poller now also stamps a cutoff timestamp at seed time, and only achievements with an unlock-time newer than that cutoff can ever fire. Stale entries are silently ignored regardless of what the seen-set looks like. The seed entry in the event log shows the cutoff timestamp."
   }
 }
