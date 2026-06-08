@@ -88,5 +88,8 @@
   },
   "1.2.9": {
     "en": "When the Microsoft refresh token does expire and gets wiped (after the three-strike defensive logic added in 1.2.8 gives up), the app now posts a Homey notification asking you to re-sign-in. Previously you only saw it in the event-log panel, which is fine for diagnostics but not great if you're not looking. The notification links to the app via the standard 'open app' path; tap the Xbox console companion entry and the settings page opens where you can sign in again."
+  },
+  "1.3.0": {
+    "en": "Microsoft refresh tokens now last weeks instead of about a day. Previous releases used an SPA-style sign-in, which Microsoft caps to a 24-hour refresh-token lifetime as a security measure for single-page apps. The token-exchange path has been switched to the public Mobile/Desktop platform, which gives a 90-day sliding-window refresh token. One-time action required: open the app settings, tap 'Sign out', then tap 'Sign in with Microsoft' again. After that you should not see the periodic 're-authorization required' notification anymore."
   }
 }
