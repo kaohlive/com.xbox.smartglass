@@ -85,5 +85,8 @@
   },
   "1.2.8": {
     "en": "Sign-in is now much harder to lose. Previous versions wiped the Microsoft refresh token the very first time Microsoft returned 'invalid_grant', which sometimes triggered on transient hiccups at app start. Now the app keeps a backup of the previous refresh token across one rotation and tries that first; only after three consecutive real failures is the token actually wiped. Network errors and 5xx responses never count as failures. Every refresh, rotation, fallback or wipe is also written to the event log so you can see exactly what's happening. The settings page now shows 'Token last rotated: …' under the signed-in status so you can spot when rotations stop happening."
+  },
+  "1.2.9": {
+    "en": "When the Microsoft refresh token does expire and gets wiped (after the three-strike defensive logic added in 1.2.8 gives up), the app now posts a Homey notification asking you to re-sign-in. Previously you only saw it in the event-log panel, which is fine for diagnostics but not great if you're not looking. The notification links to the app via the standard 'open app' path; tap the Xbox console companion entry and the settings page opens where you can sign in again."
   }
 }
